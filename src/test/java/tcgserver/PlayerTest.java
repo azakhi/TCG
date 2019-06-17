@@ -123,4 +123,58 @@ public class PlayerTest {
         assertEquals(false, player.getHand().contains(cardToPlay));
         assertEquals(9, player.getMana());
     }
+
+    @Test
+    public void dealDamage_HasHealth0Damage_NoDamageDealt() {
+        // Arrange
+        Player player = new Player(Collections.emptyList(), Collections.emptyList(), 10, 0, 0);
+
+        // Act
+        int remainingHealth = player.dealDamage(0);
+
+        // Assert
+        assertEquals(10, remainingHealth);
+        assertEquals(10, player.getHealth());
+    }
+
+    @Test
+    public void dealDamage_HasHealthNegativeDamage_ExceptionThrown() {
+        // Arrange
+        Player player = new Player(Collections.emptyList(), Collections.emptyList(), 10, 0, 0);
+
+        // Act
+        // Assert
+        assertThrows(AssertionError.class, () -> {
+            int remainingHealth = player.dealDamage(-1);
+        });
+    }
+
+    @Test
+    public void dealDamage_HasHealthPositiveDamage_DamageDealt() {
+        // Arrange
+        Player player = new Player(Collections.emptyList(), Collections.emptyList(), 10, 0, 0);
+
+        // Act
+        int remainingHealth = player.dealDamage(5);
+
+        // Assert
+        assertEquals(5, remainingHealth);
+        assertEquals(5, player.getHealth());
+    }
+
+    @Test
+    public void AllMethods_HasNoHealth_ExceptionThrown() {
+        // Arrange
+        List<Card> deck = Arrays.asList(new Card(), new Card(), new Card());
+        List<Card> hand = Arrays.asList(new Card(), new Card(), new Card(), new Card(), new Card());
+        Player player = new Player(deck, hand, -1, 0, 0);
+
+        // Act
+        // Assert
+        assertThrows(AssertionError.class, () -> {
+            int remainingHealth = player.dealDamage(1);
+            player.drawRandomCard();
+            player.playCardAt(0);
+        });
+    }
 }

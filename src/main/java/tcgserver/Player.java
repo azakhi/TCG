@@ -83,4 +83,8 @@ public class Player {
 
         return null;
     }
+
+    public int dealDamage(int damage) {
+        return -1;
+    }
 }
