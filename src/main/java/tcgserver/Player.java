@@ -106,6 +106,8 @@ public class Player {
     }
 
     public void fillMana() {
+        assert health > 0;
 
+        mana = manaSlot;
     }
 }
