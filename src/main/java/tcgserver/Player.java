@@ -71,6 +71,16 @@ public class Player {
     }
 
     public Card playCardAt(int index) {
-        return new Card();
+        if (index < hand.size() && index >= 0) {
+            int manaCost = hand.get(index).getMana();
+            if (manaCost > mana) {
+                return null;
+            }
+
+            mana -= manaCost;
+            return hand.remove(index);
+        }
+
+        return null;
     }
 }
