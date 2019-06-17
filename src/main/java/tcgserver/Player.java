@@ -6,9 +6,10 @@ import java.util.List;
 import java.util.Random;
 
 public class Player {
-    private final static int START_HEALTH = 30;
-    private final static int START_MANA_SLOT = 0;
-    private final static int MAX_HAND_SIZE = 5;
+    public final static int START_HEALTH = 30;
+    public final static int START_MANA_SLOT = 0;
+    public final static int MAX_MANA_SLOT = 10;
+    public final static int MAX_HAND_SIZE = 5;
 
     private int health;
     private int manaSlot;
@@ -94,5 +95,9 @@ public class Player {
         health -= damage;
 
         return health;
+    }
+
+    public void addManaSlot() {
+
     }
 }
