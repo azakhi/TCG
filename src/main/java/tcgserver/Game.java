@@ -58,6 +58,20 @@ public class Game {
     }
 
     public boolean start() {
+        if (players.size() >= MIN_PLAYERS && state == GameState.INITIAL) {
+            for (Player p : players) {
+                for (int i = 0; i < START_CARD_COUNT; i++) {
+                    if(!p.drawRandomCard()) {
+                        return false;
+                    }
+                }
+            }
+
+            state = GameState.ACTIVE;
+            turn = 0;
+            return true;
+        }
+
         return false;
     }
 }
