@@ -49,4 +49,52 @@ public class GameTest {
         assertEquals(Game.MAX_PLAYERS, game.getPlayers().size());
         assertNull(player);
     }
+
+    @Test
+    public void start_NotEnoughPlayers_FalseReturned() {
+        // Arrange
+        Game game = new Game(Arrays.asList(new Card(0), new Card(1), new Card(2), new Card(3), new Card(4)));
+
+        // Act
+        boolean isStarted = game.start();
+
+        // Assert
+        assertEquals(false, isStarted);
+        assertEquals(Game.GameState.INITIAL, game.getState());
+    }
+
+    @Test
+    public void start_EnoughPlayers_GameStarted() {
+        Assume.assumeTrue(Game.MAX_PLAYERS >= Game.MIN_PLAYERS);
+
+        // Arrange
+        Game game = new Game(Arrays.asList(new Card(0), new Card(1), new Card(2), new Card(3), new Card(4)));
+        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new User());
+        Assume.assumeTrue(game.getPlayers().size() == Game.MAX_PLAYERS);
+
+        // Act
+        boolean isStarted = game.start();
+
+        // Assert
+        assertEquals(true, isStarted);
+        assertEquals(Game.GameState.ACTIVE, game.getState());
+        assertEquals(0, game.getTurn());
+        for (int i = 0; i < Game.MAX_PLAYERS; i++) assertEquals(Game.START_CARD_COUNT, game.getPlayers().get(i).getHand().size());
+    }
+
+    @Test
+    public void start_AlreadyRunningGame_FalseReturned() {
+        // Arrange
+        Game game = new Game(Arrays.asList(new Card(0), new Card(1), new Card(2), new Card(3), new Card(4)));
+        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new User());
+        Assume.assumeTrue(game.getPlayers().size() == Game.MAX_PLAYERS);
+        game.start();
+        Assume.assumeTrue(game.getState() == Game.GameState.ACTIVE);
+
+        // Act
+        boolean isStarted = game.start();
+
+        // Assert
+        assertEquals(false, isStarted);
+    }
 }

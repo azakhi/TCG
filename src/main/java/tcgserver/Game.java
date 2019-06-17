@@ -13,8 +13,11 @@ public class Game {
     }
 
     public final static int MAX_PLAYERS = 2;
+    public final static int MIN_PLAYERS = 2;
+    public final static int START_CARD_COUNT = 3;
 
     private GameState state;
+    private int turn;
     private ArrayList<Player> players;
     private ArrayList<Card> initialDeck;
 
@@ -23,7 +26,10 @@ public class Game {
     }
 
     public Game(List<Card> initialDeck) {
+        assert initialDeck.size() >= START_CARD_COUNT;
+
         state = GameState.INITIAL;
+        turn = 0;
         players = new ArrayList<>();
         this.initialDeck = new ArrayList<>();
         this.initialDeck.addAll(initialDeck);
@@ -31,6 +37,14 @@ public class Game {
 
     public List<Player> getPlayers() {
         return Collections.unmodifiableList(players);
+    }
+
+    public GameState getState() {
+        return state;
+    }
+
+    public int getTurn() {
+        return turn;
     }
 
     public Player addPlayer(User user) {
@@ -41,5 +55,9 @@ public class Game {
         }
 
         return null;
+    }
+
+    public boolean start() {
+        return false;
     }
 }
