@@ -104,6 +104,7 @@ public class PlayerTest {
 
         // Assert
         assertNull(card);
+        assertEquals(true, player.getHand().contains(cardToPlay));
     }
 
     @Test
@@ -119,6 +120,7 @@ public class PlayerTest {
         // Assert
         assertEquals(4, player.getHand().size());
         assertEquals(cardToPlay, card);
+        assertEquals(false, player.getHand().contains(cardToPlay));
         assertEquals(9, player.getMana());
     }
 }
