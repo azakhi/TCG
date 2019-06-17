@@ -34,6 +34,12 @@ public class Game {
     }
 
     public Player addPlayer(User user) {
-        return new Player(Collections.emptyList(), Collections.emptyList());
+        if (players.size() < MAX_PLAYERS) {
+            Player player = new Player(initialDeck, Collections.emptyList());
+            players.add(player);
+            return player;
+        }
+
+        return null;
     }
 }
