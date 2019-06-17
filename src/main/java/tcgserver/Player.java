@@ -51,6 +51,7 @@ public class Player {
     }
 
     public boolean drawRandomCard() {
+        assert health > 0;
         assert deck != null;
         assert hand != null;
 
@@ -71,6 +72,8 @@ public class Player {
     }
 
     public Card playCardAt(int index) {
+        assert health > 0;
+
         if (index < hand.size() && index >= 0) {
             int manaCost = hand.get(index).getMana();
             if (manaCost > mana) {
@@ -85,6 +88,11 @@ public class Player {
     }
 
     public int dealDamage(int damage) {
-        return -1;
+        assert health > 0;
+        assert damage >= 0;
+
+        health -= damage;
+
+        return health;
     }
 }

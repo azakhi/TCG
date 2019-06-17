@@ -24,7 +24,7 @@ public class PlayerTest {
     public void drawRandomCard_CardAvailableNoCardsOnHand_CardDrawn() {
         // Arrange
         List<Card> deck = Arrays.asList(new Card(), new Card(), new Card());
-        Player player = new Player(deck, Collections.emptyList());
+        Player player = new Player(deck, Collections.emptyList(), 30, 0, 0);
 
         // Act
         boolean isDrawn = player.drawRandomCard();
@@ -38,7 +38,7 @@ public class PlayerTest {
     @Test
     public void drawRandomCard_NoCardsOnDeck_NoCardDrawn() {
         // Arrange
-        Player player = new Player(Collections.emptyList(), Collections.emptyList());
+        Player player = new Player(Collections.emptyList(), Collections.emptyList(), 30, 0, 0);
 
         // Act
         boolean isDrawn = player.drawRandomCard();
@@ -54,7 +54,7 @@ public class PlayerTest {
         // Arrange
         List<Card> deck = Arrays.asList(new Card(), new Card(), new Card());
         List<Card> hand = Arrays.asList(new Card(), new Card(), new Card(), new Card(), new Card());
-        Player player = new Player(deck, hand);
+        Player player = new Player(deck, hand, 30, 0, 0);
 
         // Act
         boolean isDrawn = player.drawRandomCard();
@@ -68,7 +68,7 @@ public class PlayerTest {
     @Test
     public void playCardAt_NoCardToPlay_NullReturned() {
         // Arrange
-        Player player = new Player(Collections.emptyList(), Collections.emptyList());
+        Player player = new Player(Collections.emptyList(), Collections.emptyList(), 30, 0, 0);
 
         // Act
         Card card = player.playCardAt(0);
@@ -81,7 +81,7 @@ public class PlayerTest {
     public void playCardAt_InvalidCardIndex_NullReturned() {
         // Arrange
         List<Card> hand = Arrays.asList(new Card(), new Card(), new Card(), new Card(), new Card());
-        Player player = new Player(Collections.emptyList(), hand);
+        Player player = new Player(Collections.emptyList(), hand, 30, 0, 0);
 
         // Act
         Card card = player.playCardAt(-1);
