@@ -64,4 +64,61 @@ public class PlayerTest {
         assertEquals(2, player.getDeck().size());
         assertEquals(5, player.getHand().size());
     }
+
+    @Test
+    public void playCardAt_NoCardToPlay_NullReturned() {
+        // Arrange
+        Player player = new Player(Collections.emptyList(), Collections.emptyList());
+
+        // Act
+        Card card = player.playCardAt(0);
+
+        // Assert
+        assertNull(card);
+    }
+
+    @Test
+    public void playCardAt_InvalidCardIndex_NullReturned() {
+        // Arrange
+        List<Card> hand = Arrays.asList(new Card(), new Card(), new Card(), new Card(), new Card());
+        Player player = new Player(Collections.emptyList(), hand);
+
+        // Act
+        Card card = player.playCardAt(-1);
+        Card card2 = player.playCardAt(hand.size());
+
+        // Assert
+        assertNull(card);
+        assertNull(card2);
+    }
+
+    @Test
+    public void playCardAt_ValidCardNoMana_NullReturned() {
+        // Arrange
+        Card cardToPlay = new Card(1);
+        List<Card> hand = Arrays.asList(cardToPlay, new Card(), new Card(), new Card(), new Card());
+        Player player = new Player(Collections.emptyList(), hand, 30, 0, 0);
+
+        // Act
+        Card card = player.playCardAt(0);
+
+        // Assert
+        assertNull(card);
+    }
+
+    @Test
+    public void playCardAt_ValidCardEnoughMana_CardPlayed() {
+        // Arrange
+        Card cardToPlay = new Card(1);
+        List<Card> hand = Arrays.asList(cardToPlay, new Card(), new Card(), new Card(), new Card());
+        Player player = new Player(Collections.emptyList(), hand, 30, 10, 10);
+
+        // Act
+        Card card = player.playCardAt(0);
+
+        // Assert
+        assertEquals(4, player.getHand().size());
+        assertEquals(cardToPlay, card);
+        assertEquals(9, player.getMana());
+    }
 }

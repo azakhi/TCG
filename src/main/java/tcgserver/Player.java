@@ -6,11 +6,24 @@ import java.util.List;
 import java.util.Random;
 
 public class Player {
-    private final int MAX_HAND_SIZE = 5;
+    private final static int START_HEALTH = 30;
+    private final static int START_MANA_SLOT = 0;
+    private final static int MAX_HAND_SIZE = 5;
+
+    private int health;
+    private int manaSlot;
+    private int mana;
     private ArrayList<Card> deck;
     private ArrayList<Card> hand;
 
     public Player(List<Card> deck, List<Card> hand) {
+        this(deck, hand, START_HEALTH, START_MANA_SLOT, START_MANA_SLOT);
+    }
+
+    public Player(List<Card> deck, List<Card> hand, int health, int manaSlot, int mana) {
+        this.health = health;
+        this.manaSlot = manaSlot;
+        this.mana = mana;
         this.deck = new ArrayList<>();
         this.deck.addAll(deck);
         this.hand = new ArrayList<>();
@@ -23,6 +36,18 @@ public class Player {
 
     public List<Card> getHand() {
         return Collections.unmodifiableList(hand);
+    }
+
+    public int getHealth() {
+        return health;
+    }
+
+    public int getManaSlot() {
+        return manaSlot;
+    }
+
+    public int getMana() {
+        return mana;
     }
 
     public boolean drawRandomCard() {
@@ -43,5 +68,9 @@ public class Player {
         }
 
         return true;
+    }
+
+    public Card playCardAt(int index) {
+        return new Card();
     }
 }
