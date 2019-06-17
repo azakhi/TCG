@@ -98,6 +98,10 @@ public class Player {
     }
 
     public void addManaSlot() {
+        assert health > 0;
 
+        if (manaSlot < MAX_MANA_SLOT) {
+            manaSlot++;
+        }
     }
 }
