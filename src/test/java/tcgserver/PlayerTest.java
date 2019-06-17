@@ -187,6 +187,30 @@ public class PlayerTest {
     }
 
     @Test
+    public void fillMana_NoManaSlot_SameMana() {
+        // Arrange
+        Player player = new Player(Collections.emptyList(), Collections.emptyList(), 10, 0, 0);
+
+        // Act
+        player.fillMana();
+
+        // Assert
+        assertEquals(0, player.getMana());
+    }
+
+    @Test
+    public void fillMana_LessThanSlotMana_ManaFilled() {
+        // Arrange
+        Player player = new Player(Collections.emptyList(), Collections.emptyList(), 10, 10, 0);
+
+        // Act
+        player.fillMana();
+
+        // Assert
+        assertEquals(10, player.getMana());
+    }
+
+    @Test
     public void AllMethods_HasNoHealth_ExceptionThrown() {
         // Arrange
         List<Card> deck = Arrays.asList(new Card(), new Card(), new Card());
@@ -206,6 +230,9 @@ public class PlayerTest {
         });
         assertThrows(AssertionError.class, () -> {
             player.addManaSlot();
+        });
+        assertThrows(AssertionError.class, () -> {
+            player.fillMana();
         });
     }
 }

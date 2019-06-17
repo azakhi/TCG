@@ -104,4 +104,8 @@ public class Player {
             manaSlot++;
         }
     }
+
+    public void fillMana() {
+
+    }
 }
