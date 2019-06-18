@@ -61,10 +61,12 @@ public class Game {
     public final static int MIN_PLAYERS = 2;
     public final static int START_CARD_COUNT = 3;
     public final static int BLEED_OUT_DAMAGE = 1;
+    public final static int MAX_CARD_DRAW_PER_TURN = 1;
 
     private boolean drawCardAtTurnStart;
     private GameState state;
     private int turn;
+    private int cardDrawnThisTurn;
     private ArrayList<Player> players;
     private ArrayList<Card> initialDeck;
     private ArrayList<Action> actions;
@@ -83,6 +85,7 @@ public class Game {
         this.drawCardAtTurnStart = drawCardAtTurnStart;
         state = GameState.INITIAL;
         turn = 0;
+        cardDrawnThisTurn = 0;
         players = new ArrayList<>();
         this.initialDeck = new ArrayList<>();
         this.initialDeck.addAll(initialDeck);
@@ -106,8 +109,11 @@ public class Game {
     }
 
     public Player addPlayer(User user) {
+        return addPlayer(new Player(initialDeck, Collections.emptyList()));
+    }
+
+    public Player addPlayer(Player player) {
         if (players.size() < MAX_PLAYERS) {
-            Player player = new Player(initialDeck, Collections.emptyList());
             players.add(player);
             return player;
         }
@@ -127,13 +133,85 @@ public class Game {
 
             state = GameState.ACTIVE;
             turn = 0;
-            return true;
+            return startTurn();
         }
 
         return false;
     }
 
     public boolean addAction(Action action) {
-        return false;
+        assert state == GameState.ACTIVE;
+
+        if (action.getPlayer() != (turn % players.size())) {
+            return false;
+        }
+
+        if (action.getType() == ActionType.DRAW_CARD) {
+            if (cardDrawnThisTurn < MAX_CARD_DRAW_PER_TURN) {
+                DrawCardAction drawCardAction = (DrawCardAction)action;
+                if (!players.get(drawCardAction.getPlayer()).drawRandomCard()) {
+                    players.get(drawCardAction.getPlayer()).dealDamage(BLEED_OUT_DAMAGE);
+                }
+
+                cardDrawnThisTurn++;
+                actions.add(drawCardAction);
+            }
+            else {
+                return false;
+            }
+        }
+        else if (action.getType() == ActionType.PLAY_CARD) {
+            PlayCardAction playCardAction = (PlayCardAction)action;
+            Card playedCard = players.get(playCardAction.getPlayer()).playCardAt(playCardAction.getIndex());
+            if (playedCard != null) {
+                for (int i = 0; i < players.size(); i++) {
+                    if (i != playCardAction.getPlayer()) {
+                        players.get(i).dealDamage(playedCard.getMana());
+                    }
+                }
+
+                actions.add(playCardAction);
+            }
+            else {
+                return false;
+            }
+        }
+        else if (action.getType() == ActionType.SKIP) {
+            actions.add(action);
+            turn++;
+            return startTurn();
+        }
+        else {
+            return false;
+        }
+
+        checkPlayerHealth();
+        return true;
+    }
+
+    private boolean startTurn() {
+        cardDrawnThisTurn = 0;
+        if (players.size() < 1) {
+            return true;
+        }
+
+        int activePlayer = turn % players.size();
+        players.get(activePlayer).addManaSlot();
+        players.get(activePlayer).fillMana();
+
+        if (players.size() > 0 && drawCardAtTurnStart && !addAction(new DrawCardAction(activePlayer))) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private void checkPlayerHealth() {
+        for (Player p : players) {
+            if (p.getHealth() <= 0) {
+                state = GameState.END;
+                break;
+            }
+        }
     }
 }

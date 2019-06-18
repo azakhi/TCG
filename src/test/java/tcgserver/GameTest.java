@@ -172,11 +172,10 @@ public class GameTest {
     public void addAction_PlayCard_HasCards_CardPlayedDamageDealt() {
         // Arrange
         Assume.assumeTrue(Game.MAX_PLAYERS > 0);
-        Assume.assumeTrue(Player.START_HEALTH > 0);
         ArrayList<Card> initialDeck = new ArrayList<>();
-        for (int i = 0; i < (Game.START_CARD_COUNT + 2); i++) initialDeck.add(new Card(i));
+        for (int i = 0; i < (Game.START_CARD_COUNT + 2); i++) initialDeck.add(new Card(5));
         Game game = new Game(initialDeck, true);
-        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new User());
+        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new Player(initialDeck, Collections.emptyList(), 10, 10, 10));
         Assume.assumeTrue(game.getPlayers().size() == Game.MAX_PLAYERS);
         game.start();
         Assume.assumeTrue(game.getState() == Game.GameState.ACTIVE);
@@ -192,7 +191,7 @@ public class GameTest {
         assertEquals(false, game.getPlayers().get(activePlayer).getHand().contains(playedCard));
         for (int i = 0; i < game.getPlayers().size(); i++) {
             if (i != activePlayer) {
-                assertEquals(Player.START_HEALTH - playedCard.getMana(), game.getPlayers().get(i).getHealth());
+                assertEquals(5, game.getPlayers().get(i).getHealth());
             }
         }
     }
@@ -222,11 +221,10 @@ public class GameTest {
     public void addAction_PlayCard_CardManaMoreThanPlayerHealth_CardPlayedGameEnded() {
         // Arrange
         Assume.assumeTrue(Game.MAX_PLAYERS > 0);
-        Assume.assumeTrue(Player.START_HEALTH > 0);
         ArrayList<Card> initialDeck = new ArrayList<>();
-        for (int i = 0; i < Game.START_CARD_COUNT; i++) initialDeck.add(new Card(Player.START_HEALTH + 1));
+        for (int i = 0; i < Game.START_CARD_COUNT; i++) initialDeck.add(new Card(10));
         Game game = new Game(initialDeck, true);
-        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new User());
+        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new Player(initialDeck, Collections.emptyList(), 5, 10, 10));
         Assume.assumeTrue(game.getPlayers().size() == Game.MAX_PLAYERS);
         game.start();
         Assume.assumeTrue(game.getState() == Game.GameState.ACTIVE);
@@ -237,7 +235,7 @@ public class GameTest {
         boolean isAdded = game.addAction(game.new PlayCardAction(activePlayer, 0));
 
         // Assert
-        assertEquals(false, isAdded);
+        assertEquals(true, isAdded);
         assertEquals(Game.GameState.END, game.getState());
         for (int i = 0; i < game.getPlayers().size(); i++) {
             if (i != activePlayer) {
