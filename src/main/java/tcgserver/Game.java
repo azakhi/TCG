@@ -1,10 +1,14 @@
 package tcgserver;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+@Document("games")
 public class Game {
     public enum GameState {
         INITIAL,
@@ -63,7 +67,9 @@ public class Game {
     public final static int BLEED_OUT_DAMAGE = 1;
     public final static int MAX_CARD_DRAW_PER_TURN = 1;
 
-    private boolean drawCardAtTurnStart;
+    @Id
+    private String id;
+    private boolean isDrawCardAtTurnStart;
     private GameState state;
     private int turn;
     private int cardDrawnThisTurn;
@@ -79,10 +85,10 @@ public class Game {
         this(initialDeck, true);
     }
 
-    public Game(List<Card> initialDeck, boolean drawCardAtTurnStart) {
+    public Game(List<Card> initialDeck, boolean isDrawCardAtTurnStart) {
         assert initialDeck.size() >= START_CARD_COUNT;
 
-        this.drawCardAtTurnStart = drawCardAtTurnStart;
+        this.isDrawCardAtTurnStart = isDrawCardAtTurnStart;
         state = GameState.INITIAL;
         turn = 0;
         cardDrawnThisTurn = 0;
@@ -92,12 +98,12 @@ public class Game {
         actions = new ArrayList<>();
     }
 
-    public List<Player> getPlayers() {
-        return Collections.unmodifiableList(players);
+    public String getId() {
+        return id;
     }
 
-    public List<Action> getActions() {
-        return Collections.unmodifiableList(actions);
+    public boolean isDrawCardAtTurnStart() {
+        return isDrawCardAtTurnStart;
     }
 
     public GameState getState() {
@@ -108,8 +114,24 @@ public class Game {
         return turn;
     }
 
+    public int getCardDrawnThisTurn() {
+        return cardDrawnThisTurn;
+    }
+
+    public List<Player> getPlayers() {
+        return Collections.unmodifiableList(players);
+    }
+
+    public List<Card> getInitialDeck() {
+        return Collections.unmodifiableList(initialDeck);
+    }
+
+    public List<Action> getActions() {
+        return Collections.unmodifiableList(actions);
+    }
+
     public Player addPlayer(User user) {
-        return addPlayer(new Player(initialDeck, Collections.emptyList()));
+        return addPlayer(new Player(user.getId(), initialDeck, Collections.emptyList()));
     }
 
     public Player addPlayer(Player player) {
@@ -199,7 +221,7 @@ public class Game {
         players.get(activePlayer).addManaSlot();
         players.get(activePlayer).fillMana();
 
-        if (players.size() > 0 && drawCardAtTurnStart && !addAction(new DrawCardAction(activePlayer))) {
+        if (players.size() > 0 && isDrawCardAtTurnStart && !addAction(new DrawCardAction(activePlayer))) {
             return false;
         }
 

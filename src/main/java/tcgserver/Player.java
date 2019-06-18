@@ -1,5 +1,7 @@
 package tcgserver;
 
+import org.springframework.data.annotation.Id;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -11,6 +13,8 @@ public class Player {
     public final static int MAX_MANA_SLOT = 10;
     public final static int MAX_HAND_SIZE = 5;
 
+    @Id
+    private String userId;
     private int health;
     private int manaSlot;
     private int mana;
@@ -18,10 +22,19 @@ public class Player {
     private ArrayList<Card> hand;
 
     public Player(List<Card> deck, List<Card> hand) {
-        this(deck, hand, START_HEALTH, START_MANA_SLOT, START_MANA_SLOT);
+        this("", deck, hand);
+    }
+
+    public Player(String userId, List<Card> deck, List<Card> hand) {
+        this(userId, deck, hand, START_HEALTH, START_MANA_SLOT, START_MANA_SLOT);
     }
 
     public Player(List<Card> deck, List<Card> hand, int health, int manaSlot, int mana) {
+        this("", deck, hand, health, manaSlot, mana);
+    }
+
+    public Player(String userId, List<Card> deck, List<Card> hand, int health, int manaSlot, int mana) {
+        this.userId = userId;
         this.health = health;
         this.manaSlot = manaSlot;
         this.mana = mana;
@@ -31,12 +44,8 @@ public class Player {
         this.hand.addAll(hand);
     }
 
-    public List<Card> getDeck() {
-        return Collections.unmodifiableList(deck);
-    }
-
-    public List<Card> getHand() {
-        return Collections.unmodifiableList(hand);
+    public String getUserId() {
+        return userId;
     }
 
     public int getHealth() {
@@ -49,6 +58,14 @@ public class Player {
 
     public int getMana() {
         return mana;
+    }
+
+    public List<Card> getDeck() {
+        return Collections.unmodifiableList(deck);
+    }
+
+    public List<Card> getHand() {
+        return Collections.unmodifiableList(hand);
     }
 
     public boolean drawRandomCard() {

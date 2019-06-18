@@ -1,6 +1,12 @@
 package tcgserver;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+@Document("cards")
 public class Card {
+    @Id
+    private String id;
     private int mana;
 
     public Card() {
@@ -9,6 +15,10 @@ public class Card {
 
     public Card(int mana) {
         this.mana = mana;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public int getMana() {
