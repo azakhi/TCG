@@ -236,4 +236,34 @@ public class Game {
             }
         }
     }
+
+    public class GameSimple {
+        public String id;
+        public boolean isDrawCardAtTurnStart;
+        public GameState state;
+        public int turn;
+        public int cardDrawnThisTurn;
+        public List<Player.PlayerSimple> players;
+        public List<Card> initialDeck;
+        public List<Action> actions;
+    }
+
+    public GameSimple getSimple() {
+        GameSimple gameSimple = new GameSimple();
+        gameSimple.id = id;
+        gameSimple.isDrawCardAtTurnStart = isDrawCardAtTurnStart;
+        gameSimple.state = state;
+        gameSimple.turn = turn;
+        gameSimple.cardDrawnThisTurn = cardDrawnThisTurn;
+        gameSimple.initialDeck = initialDeck;
+        gameSimple.actions = actions;
+
+        ArrayList<Player.PlayerSimple> playerSimples = new ArrayList<>();
+        for (Player p : players) {
+            playerSimples.add(p.getSimple());
+        }
+        gameSimple.players = playerSimples;
+
+        return gameSimple;
+    }
 }

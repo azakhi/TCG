@@ -11,4 +11,15 @@ public class User {
     public String getId() {
         return id;
     }
+
+    public class UserSimple {
+        public String id;
+    }
+
+    public UserSimple getSimple() {
+        UserSimple userSimple = new UserSimple();
+        userSimple.id = id;
+
+        return userSimple;
+    }
 }

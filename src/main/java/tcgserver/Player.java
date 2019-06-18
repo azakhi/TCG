@@ -21,6 +21,10 @@ public class Player {
     private ArrayList<Card> deck;
     private ArrayList<Card> hand;
 
+    public Player() {
+        this("", Collections.emptyList(), Collections.emptyList());
+    }
+
     public Player(List<Card> deck, List<Card> hand) {
         this("", deck, hand);
     }
@@ -126,5 +130,26 @@ public class Player {
         assert health > 0;
 
         mana = manaSlot;
+    }
+
+    public class PlayerSimple {
+        public String userId;
+        public int health;
+        public int manaSlot;
+        public int mana;
+        public int deckSize;
+        public int handSize;
+    }
+
+    public PlayerSimple getSimple() {
+        PlayerSimple playerSimple = new PlayerSimple();
+        playerSimple.userId = userId;
+        playerSimple.health = health;
+        playerSimple.manaSlot = manaSlot;
+        playerSimple.mana = mana;
+        playerSimple.deckSize = deck.size();
+        playerSimple.handSize = hand.size();
+
+        return playerSimple;
     }
 }
