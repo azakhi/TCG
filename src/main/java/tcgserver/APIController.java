@@ -30,16 +30,31 @@ public class APIController {
 
     @RequestMapping(value = "/api/card/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Card.CardSimple card(@PathVariable("id") String id) {
+        Optional<Card> card = cardRepository.findById(id);
+        if (card.isPresent()) {
+            return card.get().getSimple();
+        }
+
         return null;
     }
 
     @RequestMapping(value = "/api/game/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Game.GameSimple game(@PathVariable("id") String id) {
+        Optional<Game> game = gameRepository.findById(id);
+        if (game.isPresent()) {
+            return game.get().getSimple();
+        }
+
         return null;
     }
 
     @RequestMapping(value = "/api/user/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public User.UserSimple user(@PathVariable("id") String id) {
+        Optional<User> user = userRepository.findById(id);
+        if (user.isPresent()) {
+            return user.get().getSimple();
+        }
+
         return null;
     }
 }
