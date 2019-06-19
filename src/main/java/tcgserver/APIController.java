@@ -8,10 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -47,11 +44,27 @@ public class APIController {
 
     @RequestMapping(value = "/api/games", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public List<Game.GameSimple> games() {
-        return null;
+        ArrayList<Game.GameSimple> simples = new ArrayList<>();
+        List<Game> games = gameRepository.findAll();
+        for (Game g : games) {
+            simples.add(g.getSimple());
+        }
+
+        return simples;
     }
 
     @RequestMapping(value = "/api/games", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> createGame() {
+    public ResponseEntity<String> createGame(String user) {
+        Optional<User> userObject = userRepository.findById(user);
+        if (userObject.isPresent()) {
+            Game game = new Game(cardRepository.findAll());
+            game.addPlayer(userObject.get());
+            gameRepository.save(game);
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .location(URI.create("/api/games/" + game.getId()))
+                    .build();
+        }
+
         return null;
     }
 

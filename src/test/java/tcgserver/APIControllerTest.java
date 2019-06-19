@@ -95,6 +95,10 @@ public class APIControllerTest {
         // Arrange
         User user = new User();
         userRepository.save(user);
+        for (int i = 0; i < Game.START_CARD_COUNT; i++) {
+            Card card = new Card(5);
+            cardRepository.save(card);
+        }
 
         // Act
         ValidatableResponse response = given().urlEncodingEnabled(true).redirects().follow(false)
