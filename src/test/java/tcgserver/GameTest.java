@@ -117,7 +117,7 @@ public class GameTest {
 
         // Act
         int activePlayer = game.getTurn() % game.getPlayers().size();
-        boolean isAdded = game.addAction(game.new DrawCardAction(activePlayer));
+        boolean isAdded = game.addAction(game.new Action(activePlayer, Game.ActionType.DRAW_CARD));
 
         // Assert
         assertEquals(true, isAdded);
@@ -136,10 +136,10 @@ public class GameTest {
         game.start();
         Assume.assumeTrue(game.getState() == Game.GameState.ACTIVE);
         int activePlayer = game.getTurn() % game.getPlayers().size();
-        Assume.assumeTrue(game.addAction(game.new DrawCardAction(activePlayer)));
+        Assume.assumeTrue(game.addAction(game.new Action(activePlayer, Game.ActionType.DRAW_CARD)));
 
         // Act
-        boolean isAdded = game.addAction(game.new DrawCardAction(activePlayer));
+        boolean isAdded = game.addAction(game.new Action(activePlayer, Game.ActionType.DRAW_CARD));
 
         // Assert
         assertEquals(false, isAdded);
@@ -161,7 +161,7 @@ public class GameTest {
         Assume.assumeTrue(game.getPlayers().get(activePlayer).getDeck().size() == 0);
 
         // Act
-        boolean isAdded = game.addAction(game.new DrawCardAction(activePlayer));
+        boolean isAdded = game.addAction(game.new Action(activePlayer, Game.ActionType.DRAW_CARD));
 
         // Assert
         assertEquals(true, isAdded);
@@ -184,7 +184,7 @@ public class GameTest {
 
         // Act
         Card playedCard = game.getPlayers().get(activePlayer).getHand().get(0);
-        boolean isAdded = game.addAction(game.new PlayCardAction(activePlayer, 0));
+        boolean isAdded = game.addAction(game.new Action(activePlayer, Game.ActionType.PLAY_CARD, 0));
 
         // Assert
         assertEquals(true, isAdded);
@@ -211,7 +211,7 @@ public class GameTest {
 
         // Act
         int activePlayer = game.getTurn() % game.getPlayers().size();
-        boolean isAdded = game.addAction(game.new PlayCardAction(activePlayer, game.getPlayers().get(activePlayer).getHand().size()));
+        boolean isAdded = game.addAction(game.new Action(activePlayer, Game.ActionType.PLAY_CARD, game.getPlayers().get(activePlayer).getHand().size()));
 
         // Assert
         assertEquals(false, isAdded);
@@ -232,7 +232,7 @@ public class GameTest {
         Assume.assumeTrue(game.getPlayers().get(activePlayer).getHand().size() > 0);
 
         // Act
-        boolean isAdded = game.addAction(game.new PlayCardAction(activePlayer, 0));
+        boolean isAdded = game.addAction(game.new Action(activePlayer, Game.ActionType.PLAY_CARD, 0));
 
         // Assert
         assertEquals(true, isAdded);
@@ -280,8 +280,8 @@ public class GameTest {
 
         // Act
         int otherPlayer = (game.getTurn() + 1) % game.getPlayers().size();
-        boolean isDrawCardAdded = game.addAction(game.new DrawCardAction(otherPlayer));
-        boolean isPlayCardAdded = game.addAction(game.new PlayCardAction(otherPlayer, 0));
+        boolean isDrawCardAdded = game.addAction(game.new Action(otherPlayer, Game.ActionType.DRAW_CARD));
+        boolean isPlayCardAdded = game.addAction(game.new Action(otherPlayer, Game.ActionType.PLAY_CARD, 0));
         boolean isActionAdded = game.addAction(game.new Action(otherPlayer));
 
         // Assert
@@ -304,10 +304,10 @@ public class GameTest {
         // Act
         // Assert
         assertThrows(AssertionError.class, () -> {
-            game.addAction(game.new DrawCardAction(0));
+            game.addAction(game.new Action(0, Game.ActionType.DRAW_CARD));
         });
         assertThrows(AssertionError.class, () -> {
-            game.addAction(game.new PlayCardAction(0, 0));
+            game.addAction(game.new Action(0, Game.ActionType.PLAY_CARD, 0));
         });
         assertThrows(AssertionError.class, () -> {
             game.addAction(game.new Action(0));

@@ -24,11 +24,25 @@ public class Game {
 
     public class Action {
         private int player;
-        protected ActionType type;
+        private ActionType type;
+        private int index;
 
         public Action(int player) {
-            type = ActionType.SKIP;
             this.player = player;
+            type = ActionType.SKIP;
+            index = -1;
+        }
+
+        public Action(int player, ActionType type) {
+            this.type = type;
+            this.player = player;
+            index = -1;
+        }
+
+        public Action(int player, ActionType type, int index) {
+            this.type = type;
+            this.player = player;
+            this.index = index;
         }
 
         public ActionType getType() {
@@ -38,26 +52,9 @@ public class Game {
         public int getPlayer() {
             return player;
         }
-    }
-
-    public class PlayCardAction extends Action {
-        private int index;
-
-        public PlayCardAction(int player, int index) {
-            super(player);
-            type = ActionType.PLAY_CARD;
-            this.index = index;
-        }
 
         public int getIndex() {
             return index;
-        }
-    }
-
-    public class DrawCardAction extends Action {
-        public DrawCardAction(int player) {
-            super(player);
-            type = ActionType.DRAW_CARD;
         }
     }
 
@@ -78,7 +75,7 @@ public class Game {
     private ArrayList<Action> actions;
 
     public Game() {
-        this(Arrays.asList(new Card(0), new Card(1), new Card(2), new Card(3), new Card(4)));
+        this(null);
     }
 
     public Game(List<Card> initialDeck) {
@@ -86,6 +83,14 @@ public class Game {
     }
 
     public Game(List<Card> initialDeck, boolean isDrawCardAtTurnStart) {
+        if (initialDeck == null) {
+            ArrayList<Card> cards = new ArrayList<>();
+            for (int i = 0; i < START_CARD_COUNT; i++) {
+                cards.add(new Card(i));
+            }
+            initialDeck = cards;
+        }
+
         assert initialDeck.size() >= START_CARD_COUNT;
 
         this.isDrawCardAtTurnStart = isDrawCardAtTurnStart;
@@ -130,6 +135,10 @@ public class Game {
         return Collections.unmodifiableList(actions);
     }
 
+    public int getActivePlayer() {
+        return turn % players.size();
+    }
+
     public Player addPlayer(User user) {
         return addPlayer(new Player(user.getId(), initialDeck, Collections.emptyList()));
     }
@@ -170,29 +179,27 @@ public class Game {
 
         if (action.getType() == ActionType.DRAW_CARD) {
             if (cardDrawnThisTurn < MAX_CARD_DRAW_PER_TURN) {
-                DrawCardAction drawCardAction = (DrawCardAction)action;
-                if (!players.get(drawCardAction.getPlayer()).drawRandomCard()) {
-                    players.get(drawCardAction.getPlayer()).dealDamage(BLEED_OUT_DAMAGE);
+                if (!players.get(action.getPlayer()).drawRandomCard()) {
+                    players.get(action.getPlayer()).dealDamage(BLEED_OUT_DAMAGE);
                 }
 
                 cardDrawnThisTurn++;
-                actions.add(drawCardAction);
+                actions.add(action);
             }
             else {
                 return false;
             }
         }
         else if (action.getType() == ActionType.PLAY_CARD) {
-            PlayCardAction playCardAction = (PlayCardAction)action;
-            Card playedCard = players.get(playCardAction.getPlayer()).playCardAt(playCardAction.getIndex());
+            Card playedCard = players.get(action.getPlayer()).playCardAt(action.getIndex());
             if (playedCard != null) {
                 for (int i = 0; i < players.size(); i++) {
-                    if (i != playCardAction.getPlayer()) {
+                    if (i != action.getPlayer()) {
                         players.get(i).dealDamage(playedCard.getMana());
                     }
                 }
 
-                actions.add(playCardAction);
+                actions.add(action);
             }
             else {
                 return false;
@@ -221,7 +228,7 @@ public class Game {
         players.get(activePlayer).addManaSlot();
         players.get(activePlayer).fillMana();
 
-        if (players.size() > 0 && isDrawCardAtTurnStart && !addAction(new DrawCardAction(activePlayer))) {
+        if (players.size() > 0 && isDrawCardAtTurnStart && !addAction(new Action(activePlayer, ActionType.DRAW_CARD))) {
             return false;
         }
 
