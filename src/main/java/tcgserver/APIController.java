@@ -128,6 +128,7 @@ public class APIController {
                         }
                     }
 
+                    gameRepository.save(game);
                     return game.getSimple();
                 }
                 else {

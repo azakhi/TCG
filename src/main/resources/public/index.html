@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TCG Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <style type="text/css">
+        .card {
+            float: left;
+            height: 150px;
+            width: 100px;
+            box-sizing: border-box;
+            border: #000 solid 2px;
+            margin: 10px;
+            padding: 10px;
+        }
+
+        .closed-card {
+            background-color: darkblue;
+            color: floralwhite;
+        }
+
+        .playable-card {
+            background-color: aqua;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .open-card {
+            background-color: cadetblue;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .active-card {
+            border: #fff solid 2px !important;
+        }
+
+        .info-tab {
+            min-height: 240px;
+        }
+    </style>
+</head>
+<body>
+<div id="login" class="page-cont container-fluid">
+    <h1>TCG</h1>
+    <form onsubmit="return false">
+        <div id="login-alert" class="alert alert-danger" role="alert">
+            This is a danger alert—check it out!
+        </div>
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" class="form-control" id="username" placeholder="Enter username">
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" class="form-control" id="password" placeholder="Password">
+        </div>
+        <div class="form-group">
+            <button id="login-button" type="submit" class="log-button btn btn-primary">Login</button>
+        </div>
+        <div class="form-group">
+            <button id="register-button" type="submit" class="log-button btn btn-success">Register</button>
+        </div>
+    </form>
+</div>
+
+<div id="find-game" class="page-cont container-fluid">
+    <h1 id="welcome">Welcome!</h1>
+    <form onsubmit="return false">
+        <div id="find-game-alert" class="alert alert-danger" role="alert">
+            This is a danger alert—check it out!
+        </div>
+        <div class="form-group">
+            <label for="game-id">Game ID</label>
+            <input type="text" class="form-control" id="game-id" placeholder="Enter game id">
+        </div>
+        <div class="form-group">
+            <button id="join-game-button" type="submit" class="log-button btn btn-primary">Join to Game</button>
+        </div>
+        <div class="form-group">
+            <button id="create-game-button" type="submit" class="log-button btn btn-success">Create Game</button>
+        </div>
+        <div class="form-group">
+            <button id="logout-button" type="submit" class="log-button btn btn-danger">Logout</button>
+        </div>
+    </form>
+</div>
+
+<div id="game" class="page-cont container-fluid">
+    <h1 id="game-room">Game Room</h1>
+    <h4 id="players"></h4>
+    <form onsubmit="return false">
+        <div id="game-alert" class="alert alert-danger" role="alert">
+            This is a danger alert—check it out!
+        </div>
+        <div class="form-group">
+            <button id="start-game-button" type="submit" class="log-button btn btn-success">Start Game</button>
+            <button id="leave-game-button" type="submit" class="log-button btn btn-danger">Leave Game</button>
+        </div>
+    </form>
+
+    <div id="opponent" class="info-tab col-12">
+
+    </div>
+
+    <div id="player" class="info-tab col-12">
+
+    </div>
+    <div id="turn-buttons" class="form-group">
+        <button id="play-card-button" class="log-button btn btn-success">Play Card</button>
+        <button id="end-turn-button" class="log-button btn btn-primary">End Turn</button>
+    </div>
+</div>
+
+<div id="end-game" class="page-cont container-fluid">
+    <h1>Game Ended</h1>
+    <h4>Final Healths</h4>
+    <div id="healths" class="form-group">
+    </div>
+    <div class="form-group">
+        <button id="leave-end-button" type="submit" class="log-button btn btn-danger">Leave</button>
+    </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+<script src="index.js"></script>
+</body>
+</html>
