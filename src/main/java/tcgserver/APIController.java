@@ -17,6 +17,17 @@ import java.util.Optional;
 
 @RestController
 public class APIController {
+    public class APIException extends Exception {
+        private HttpStatus status;
+        public APIException(HttpStatus status, String message) {
+            super(message);
+            this.status = status;
+        }
+
+        public HttpStatus getStatus() {
+            return status;
+        }
+    }
 
     @Autowired
     private GameRepository gameRepository;
@@ -30,6 +41,19 @@ public class APIController {
     @RequestMapping(value = "/api", produces = MediaType.APPLICATION_JSON_VALUE)
     public String index() {
         return "{\"version\":\"0.1\"}";
+    }
+
+    @ExceptionHandler(APIException.class)
+    public ResponseEntity handleException(APIException e) {
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put("status", e.getStatus().value());
+            obj.put("message", e.getMessage());
+        } catch (JSONException je) {
+            // TODO: Handle in a better way
+        }
+
+        return ResponseEntity.status(e.getStatus()).contentType(MediaType.APPLICATION_JSON).body(obj.toString());
     }
 
     @RequestMapping(value = "/api/cards", produces = MediaType.APPLICATION_JSON_VALUE)
