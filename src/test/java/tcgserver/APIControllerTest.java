@@ -275,16 +275,36 @@ public class APIControllerTest {
     }
 
     @Test
-    public void addPlayer_MaxPlayers() {
+    public void addPlayer_UserNotFound() {
         // Arrange
         Game game = new Game();
         gameRepository.save(game);
+        userRepository.deleteAll();
+
+        // Act
+        ValidatableResponse response = given().urlEncodingEnabled(true).redirects().follow(false)
+                .param("user", "a")
+                .header("Accept", ContentType.JSON.getAcceptHeader())
+                .post("/api/games/" + game.getId() + "/players").then();
+
+        // Assert
+        response.assertThat()
+                .statusCode(HttpStatus.NOT_FOUND.value())
+                .body("status", equalTo(HttpStatus.NOT_FOUND.value()))
+                .body("message", notNullValue());
+    }
+
+    @Test
+    public void addPlayer_MaxPlayers() {
+        // Arrange
+        Game game = new Game();
         for (int i = 0; i < Game.MAX_PLAYERS; i++) {
             User temp = new User();
             userRepository.save(temp);
             game.addPlayer(temp);
         }
         Assume.assumeTrue(game.getPlayers().size() >= Game.MAX_PLAYERS);
+        gameRepository.save(game);
         User user = new User();
         userRepository.save(user);
 
@@ -348,6 +368,21 @@ public class APIControllerTest {
 
         // Act
         ValidatableResponse response = get("/api/games/" + game.getId() + "/players/0").then();
+
+        // Assert
+        response.assertThat()
+                .statusCode(HttpStatus.NOT_FOUND.value())
+                .body("status", equalTo(HttpStatus.NOT_FOUND.value()))
+                .body("message", notNullValue());
+    }
+
+    @Test
+    public void getPlayer_GameNotFound() {
+        // Arrange
+        gameRepository.deleteAll();
+
+        // Act
+        ValidatableResponse response = get("/api/games/a/players/0").then();
 
         // Assert
         response.assertThat()
@@ -496,6 +531,21 @@ public class APIControllerTest {
 
         // Act
         ValidatableResponse response = get("/api/games/" + game.getId() + "/actions/-1").then();
+
+        // Assert
+        response.assertThat()
+                .statusCode(HttpStatus.NOT_FOUND.value())
+                .body("status", equalTo(HttpStatus.NOT_FOUND.value()))
+                .body("message", notNullValue());
+    }
+
+    @Test
+    public void getAction_GameNotFound() {
+        // Arrange
+        gameRepository.deleteAll();
+
+        // Act
+        ValidatableResponse response = get("/api/games/a/actions/0").then();
 
         // Assert
         response.assertThat()

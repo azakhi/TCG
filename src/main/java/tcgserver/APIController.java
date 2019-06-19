@@ -68,13 +68,13 @@ public class APIController {
     }
 
     @RequestMapping(value = "/api/cards/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Card.CardSimple card(@PathVariable("id") String id) {
+    public Card.CardSimple card(@PathVariable("id") String id) throws APIException {
         Optional<Card> card = cardRepository.findById(id);
         if (card.isPresent()) {
             return card.get().getSimple();
         }
 
-        return null;
+        throw new APIException(HttpStatus.NOT_FOUND, "Card not found");
     }
 
     @RequestMapping(value = "/api/games", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -89,7 +89,7 @@ public class APIController {
     }
 
     @RequestMapping(value = "/api/games", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> createGame(String user) {
+    public ResponseEntity<String> createGame(String user) throws APIException {
         Optional<User> userObject = userRepository.findById(user);
         if (userObject.isPresent()) {
             Game game = new Game(cardRepository.findAll());
@@ -100,21 +100,21 @@ public class APIController {
                     .build();
         }
 
-        return null;
+        throw new APIException(HttpStatus.BAD_REQUEST, "User not found");
     }
 
     @RequestMapping(value = "/api/games/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Game.GameSimple game(@PathVariable("id") String id) {
+    public Game.GameSimple game(@PathVariable("id") String id) throws APIException {
         Optional<Game> game = gameRepository.findById(id);
         if (game.isPresent()) {
             return game.get().getSimple();
         }
 
-        return null;
+        throw new APIException(HttpStatus.NOT_FOUND, "Game not found");
     }
 
     @RequestMapping(value = "/api/games/{id}/players", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<Player.PlayerSimple> players(@PathVariable("id") String id) {
+    public List<Player.PlayerSimple> players(@PathVariable("id") String id) throws APIException {
         Optional<Game> game = gameRepository.findById(id);
         if (game.isPresent()) {
             ArrayList<Player.PlayerSimple> simples = new ArrayList<>();
@@ -125,11 +125,11 @@ public class APIController {
             return simples;
         }
 
-        return null;
+        throw new APIException(HttpStatus.NOT_FOUND, "Game not found");
     }
 
     @RequestMapping(value = "/api/games/{id}/players", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> addPlayer(@PathVariable("id") String id, String user) {
+    public ResponseEntity<String> addPlayer(@PathVariable("id") String id, String user) throws APIException {
         Optional<Game> gameObject = gameRepository.findById(id);
         if (gameObject.isPresent()) {
             Game game = gameObject.get();
@@ -142,14 +142,20 @@ public class APIController {
                             .location(URI.create("/api/games/" + game.getId() + "/players/" + index))
                             .build();
                 }
+                else {
+                    throw new APIException(HttpStatus.BAD_REQUEST, "Could not add user to the game");
+                }
+            }
+            else {
+                throw new APIException(HttpStatus.NOT_FOUND, "User not found");
             }
         }
 
-        return null;
+        throw new APIException(HttpStatus.NOT_FOUND, "Game not found");
     }
 
     @RequestMapping(value = "/api/games/{id}/players/{index}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Player player(@PathVariable("id") String id, @PathVariable("index") int index) {
+    public Player player(@PathVariable("id") String id, @PathVariable("index") int index) throws APIException {
         Optional<Game> gameObject = gameRepository.findById(id);
         if (gameObject.isPresent()) {
             List<Player> players = gameObject.get().getPlayers();
@@ -158,54 +164,61 @@ public class APIController {
             }
         }
 
-        return null;
+        throw new APIException(HttpStatus.NOT_FOUND, "User not found");
     }
 
     @RequestMapping(value = "/api/games/{id}/actions", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<Game.Action> actions(@PathVariable("id") String id) {
+    public List<Game.Action> actions(@PathVariable("id") String id) throws APIException {
         Optional<Game> game = gameRepository.findById(id);
         if (game.isPresent()) {
             return game.get().getActions();
         }
 
-        return null;
+        throw new APIException(HttpStatus.NOT_FOUND, "Game not found");
     }
 
     @RequestMapping(value = "/api/games/{id}/actions", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> addAction(@PathVariable("id") String id, Game.ActionType type, int player, int index) {
+    public ResponseEntity<String> addAction(@PathVariable("id") String id, Game.ActionType type, int player, int index) throws APIException {
         Optional<Game> game = gameRepository.findById(id);
         if (game.isPresent()) {
             Game.Action action = new Game.Action(player, type, index);
             if (game.get().addAction(action)) {
+                gameRepository.save(game.get());
                 return ResponseEntity.status(HttpStatus.FOUND)
                         .location(URI.create("/api/games/" + game.get().getId() + "/actions/" + (game.get().getActions().size() - 1)))
                         .build();
             }
+            else {
+                throw new APIException(HttpStatus.BAD_REQUEST, "Could not add action");
+            }
         }
 
-        return null;
+        throw new APIException(HttpStatus.NOT_FOUND, "Game not found");
     }
 
     @RequestMapping(value = "/api/games/{id}/actions/{index}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Game.Action action(@PathVariable("id") String id, @PathVariable("index") int index) {
+    public Game.Action action(@PathVariable("id") String id, @PathVariable("index") int index) throws APIException {
         Optional<Game> gameObject = gameRepository.findById(id);
         if (gameObject.isPresent()) {
             List<Game.Action> actions = gameObject.get().getActions();
             if (index >= 0 && index < actions.size()) {
                 return actions.get(index);
             }
+            else {
+                throw new APIException(HttpStatus.NOT_FOUND, "Action not found");
+            }
         }
 
-        return null;
+        throw new APIException(HttpStatus.NOT_FOUND, "Game not found");
     }
 
     @RequestMapping(value = "/api/users/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public User.UserSimple user(@PathVariable("id") String id) {
+    public User.UserSimple user(@PathVariable("id") String id) throws APIException {
         Optional<User> user = userRepository.findById(id);
         if (user.isPresent()) {
             return user.get().getSimple();
         }
 
-        return null;
+        throw new APIException(HttpStatus.NOT_FOUND, "User not found");
     }
 }

@@ -141,7 +141,7 @@ public class Game {
 
     public int getPlayerIndex(String userId) {
         for (int i = 0; i < players.size(); i++) {
-            if (players.get(i).getUserId() == userId) {
+            if (players.get(i).getUserId().equals(userId)) {
                 return i;
             }
         }
