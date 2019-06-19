@@ -206,6 +206,143 @@ public class APIControllerTest {
     }
 
     @Test
+    public void startGame() {
+        // Arrange
+        Assume.assumeTrue(Game.MIN_PLAYERS > 0);
+        userRepository.deleteAll();
+        ArrayList<User> users = new ArrayList<>();
+        Game game = new Game(null, false);
+        for (int i = 0; i < Game.MIN_PLAYERS; i++) {
+            User user = createUserForTest();
+            game.addPlayer(user);
+            users.add(user);
+        }
+        gameRepository.save(game);
+        Assume.assumeTrue(game.getState() == Game.GameState.INITIAL);
+        String token = new String(Base64.encodeBase64((users.get(0).getId() + ":" + users.get(0).getAuthToken()).getBytes()));
+
+        // Act
+        ValidatableResponse response = given().urlEncodingEnabled(true)
+                .param("state", Game.GameState.ACTIVE)
+                .header("Accept", ContentType.JSON.getAcceptHeader())
+                .header("Authorization", "Bearer " + token)
+                .post("/api/games/" + game.getId()).then();
+
+        // Assert
+        response.assertThat()
+                .body("id", equalTo(game.getId()))
+                .body("state", equalTo(Game.GameState.ACTIVE.toString()));
+    }
+
+    @Test
+    public void startGame_GameNotFount() {
+        // Arrange
+        gameRepository.deleteAll();
+        User user = createUserForTest();
+        String token = new String(Base64.encodeBase64((user.getId() + ":" + user.getAuthToken()).getBytes()));
+
+        // Act
+        ValidatableResponse response = given().urlEncodingEnabled(true)
+                .param("state", Game.GameState.ACTIVE)
+                .header("Accept", ContentType.JSON.getAcceptHeader())
+                .header("Authorization", "Bearer " + token)
+                .post("/api/games/a").then();
+
+        // Assert
+        response.assertThat()
+                .statusCode(HttpStatus.NOT_FOUND.value())
+                .body("status", equalTo(HttpStatus.NOT_FOUND.value()))
+                .body("message", notNullValue());
+    }
+
+    @Test
+    public void startGame_Unauthorized() {
+        // Arrange
+        Assume.assumeTrue(Game.MIN_PLAYERS > 0);
+        userRepository.deleteAll();
+        ArrayList<User> users = new ArrayList<>();
+        Game game = new Game(null, false);
+        for (int i = 0; i < Game.MIN_PLAYERS; i++) {
+            User user = createUserForTest();
+            game.addPlayer(user);
+            users.add(user);
+        }
+        gameRepository.save(game);
+        Assume.assumeTrue(game.getState() == Game.GameState.INITIAL);
+        String token = new String(Base64.encodeBase64(("a:b").getBytes()));
+
+        // Act
+        ValidatableResponse response = given().urlEncodingEnabled(true)
+                .param("state", Game.GameState.ACTIVE)
+                .header("Accept", ContentType.JSON.getAcceptHeader())
+                .header("Authorization", "Bearer " + token)
+                .post("/api/games/" + game.getId()).then();
+
+        // Assert
+        response.assertThat()
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                .body("status", equalTo(HttpStatus.UNAUTHORIZED.value()))
+                .body("message", notNullValue());
+    }
+
+    @Test
+    public void startGame_NotPlayer() {
+        // Arrange
+        Assume.assumeTrue(Game.MIN_PLAYERS > 0);
+        userRepository.deleteAll();
+        ArrayList<User> users = new ArrayList<>();
+        Game game = new Game(null, false);
+        for (int i = 0; i < Game.MIN_PLAYERS; i++) {
+            User user = createUserForTest();
+            game.addPlayer(user);
+            users.add(user);
+        }
+        gameRepository.save(game);
+        Assume.assumeTrue(game.getState() == Game.GameState.INITIAL);
+        User user = createUserForTest();
+        String token = new String(Base64.encodeBase64((user.getId() + ":" + user.getAuthToken()).getBytes()));
+
+        // Act
+        ValidatableResponse response = given().urlEncodingEnabled(true)
+                .param("state", Game.GameState.ACTIVE)
+                .header("Accept", ContentType.JSON.getAcceptHeader())
+                .header("Authorization", "Bearer " + token)
+                .post("/api/games/" + game.getId()).then();
+
+        // Assert
+        response.assertThat()
+                .statusCode(HttpStatus.FORBIDDEN.value())
+                .body("status", equalTo(HttpStatus.FORBIDDEN.value()))
+                .body("message", notNullValue());
+    }
+
+    @Test
+    public void startGame_NotEnoughPlayers() {
+        // Arrange
+        Assume.assumeTrue(Game.MIN_PLAYERS > 1);
+        Game game = new Game(null, false);
+        User user = createUserForTest();
+        game.addPlayer(user);
+        gameRepository.save(game);
+        Assume.assumeTrue(game.getState() == Game.GameState.INITIAL);
+        String token = new String(Base64.encodeBase64((user.getId() + ":" + user.getAuthToken()).getBytes()));
+
+        // Act
+        ValidatableResponse response = given().urlEncodingEnabled(true)
+                .param("state", Game.GameState.ACTIVE)
+                .header("Accept", ContentType.JSON.getAcceptHeader())
+                .header("Authorization", "Bearer " + token)
+                .post("/api/games/" + game.getId()).then();
+
+        // Assert
+        response.assertThat()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body("status", equalTo(HttpStatus.BAD_REQUEST.value()))
+                .body("message", notNullValue());
+    }
+
+
+    @Test
     public void getPlayers() {
         // Arrange
         Game game = new Game();

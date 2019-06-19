@@ -104,11 +104,39 @@ public class APIController {
         throw new APIException(HttpStatus.UNAUTHORIZED, "User login is required");
     }
 
-    @RequestMapping(value = "/api/games/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/api/games/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public Game.GameSimple game(@PathVariable("id") String id) throws APIException {
         Optional<Game> game = gameRepository.findById(id);
         if (game.isPresent()) {
             return game.get().getSimple();
+        }
+
+        throw new APIException(HttpStatus.NOT_FOUND, "Game not found");
+    }
+    
+    @RequestMapping(value = "/api/games/{id}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    public Game.GameSimple updateGame(@PathVariable("id") String id, Game.GameState state, @RequestHeader(defaultValue = "") String Authorization) throws APIException {
+        Optional<Game> gameObject = gameRepository.findById(id);
+        if (gameObject.isPresent()) {
+            Game game = gameObject.get();
+            User user = getAuthorizedUser(Authorization);
+            if (user != null) {
+                if (game.getPlayerIndex(user.getId()) >= 0) {
+                    if (state == Game.GameState.ACTIVE && game.getState() == Game.GameState.INITIAL) {
+                        if(!game.start()) {
+                            throw new APIException(HttpStatus.BAD_REQUEST, "Could not start game");
+                        }
+                    }
+
+                    return game.getSimple();
+                }
+                else {
+                    throw new APIException(HttpStatus.FORBIDDEN, "Not authorized");
+                }
+            }
+            else {
+                throw new APIException(HttpStatus.UNAUTHORIZED, "User login is required");
+            }
         }
 
         throw new APIException(HttpStatus.NOT_FOUND, "Game not found");
