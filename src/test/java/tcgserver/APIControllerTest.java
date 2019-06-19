@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.*;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import org.junit.After;
+import org.junit.Assume;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -54,6 +55,25 @@ public class APIControllerTest {
     @Test
     public void getApiIndex() {
         get("/api").then().assertThat().body("version", equalTo("0.1"));
+    }
+
+    @Test
+    public void getCards() {
+        // Arrange
+        cardRepository.deleteAll();
+        Card card1 = new Card(1);
+        cardRepository.save(card1);
+        Card card2 = new Card(2);
+        cardRepository.save(card2);
+
+        // Act
+        ValidatableResponse response = get("/api/cards").then();
+
+        // Assert
+        response.assertThat()
+                .body("size()", equalTo(2))
+                .body("[0].id", equalTo(card1.getId()))
+                .body("[1].id", equalTo(card2.getId()));
     }
 
     @Test
@@ -130,6 +150,129 @@ public class APIControllerTest {
                 .body("players.size()", equalTo(2))
                 .body("players[0].userId", equalTo("userId1"))
                 .body("players[1].userId", equalTo("userId2"));
+    }
+
+    @Test
+    public void getPlayers() {
+        // Arrange
+        Game game = new Game(Arrays.asList(new Card(1), new Card(2), new Card(3)));
+        game.addPlayer(new Player("userId1", game.getInitialDeck(), Collections.emptyList()));
+        game.addPlayer(new Player("userId2", game.getInitialDeck(), Collections.emptyList()));
+        gameRepository.save(game);
+
+        // Act
+        ValidatableResponse response = get("/api/games/" + game.getId() + "/players").then();
+
+        // Assert
+        response.assertThat()
+                .body("size()", equalTo(2))
+                .body("[0].userId", equalTo("userId1"))
+                .body("[1].userId", equalTo("userId2"));
+    }
+
+    @Test
+    public void addPlayer() {
+        // Arrange
+        Game game = new Game(Arrays.asList(new Card(1), new Card(2), new Card(3)));
+        gameRepository.save(game);
+        User user = new User();
+        userRepository.save(user);
+
+        // Act
+        ValidatableResponse response = given().urlEncodingEnabled(true).redirects().follow(false)
+                .param("user", user.getId())
+                .header("Accept", ContentType.JSON.getAcceptHeader())
+                .post("/api/games/" + game.getId() + "/players").then();
+
+        // Assert
+        response.assertThat()
+                .statusCode(302)
+                .header("Location", equalTo("/api/games/" + game.getId() + "/players/0"));
+    }
+
+    @Test
+    public void getPlayer() {
+        // Arrange
+        Game game = new Game(Arrays.asList(new Card(1), new Card(2), new Card(3)));
+        game.addPlayer(new Player("userId", game.getInitialDeck(), Collections.emptyList()));
+        gameRepository.save(game);
+
+        // Act
+        ValidatableResponse response = get("/api/games/" + game.getId() + "/players/0").then();
+
+        // Assert
+        response.assertThat()
+                .body("userId", equalTo("userId"))
+                .body("deck.size()", equalTo(3))
+                .body("hand.size()", equalTo(0));
+    }
+
+    @Test
+    public void getActions() {
+        // Arrange
+        Game game = new Game();
+        for (int i = 0; i < Game.MIN_PLAYERS; i++) {
+            game.addPlayer(new Player("userId" + i, game.getInitialDeck(), Collections.emptyList()));
+        }
+        Assume.assumeTrue(game.start());
+        if (!game.isDrawCardAtTurnStart()) {
+            Assume.assumeTrue(game.addAction(game.new Action(game.getActivePlayer(), Game.ActionType.DRAW_CARD)));
+        }
+        gameRepository.save(game);
+
+        // Act
+        ValidatableResponse response = get("/api/games/" + game.getId() + "/actions").then();
+
+        // Assert
+        response.assertThat()
+                .body("size()", equalTo(1))
+                .body("[0].type", equalTo("DRAW_CARD"));
+    }
+
+    @Test
+    public void addAction() {
+        // Arrange
+        Game game = new Game(null, false);
+        for (int i = 0; i < Game.MIN_PLAYERS; i++) {
+            game.addPlayer(new Player("userId" + i, game.getInitialDeck(), Collections.emptyList()));
+        }
+        Assume.assumeTrue(game.start());
+        gameRepository.save(game);
+        int currentActionCount = game.getActions().size();
+
+        // Act
+        ValidatableResponse response = given().urlEncodingEnabled(true).redirects().follow(false)
+                .param("type", Game.ActionType.DRAW_CARD)
+                .param("player", game.getActivePlayer())
+                .param("index", 0)
+                .header("Accept", ContentType.JSON.getAcceptHeader())
+                .post("/api/games/" + game.getId() + "/actions").then();
+
+        // Assert
+        response.assertThat()
+                .statusCode(302)
+                .header("Location", equalTo("/api/games/" + game.getId() + "/actions/" + currentActionCount));
+    }
+
+    @Test
+    public void getAction() {
+        // Arrange
+        Game game = new Game();
+        for (int i = 0; i < Game.MIN_PLAYERS; i++) {
+            game.addPlayer(new Player("userId" + i, game.getInitialDeck(), Collections.emptyList()));
+        }
+        Assume.assumeTrue(game.start());
+        if (!game.isDrawCardAtTurnStart()) {
+            Assume.assumeTrue(game.addAction(game.new Action(game.getActivePlayer(), Game.ActionType.DRAW_CARD)));
+        }
+        gameRepository.save(game);
+
+        // Act
+        ValidatableResponse response = get("/api/games/" + game.getId() + "/actions/0").then();
+
+        // Assert
+        response.assertThat()
+                .body("type", equalTo("DRAW_CARD"));
     }
 
     @Test

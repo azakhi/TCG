@@ -32,6 +32,11 @@ public class APIController {
         return "{\"version\":\"0.1\"}";
     }
 
+    @RequestMapping(value = "/api/cards", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<Card.CardSimple> cards() {
+        return null;
+    }
+
     @RequestMapping(value = "/api/cards/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Card.CardSimple card(@PathVariable("id") String id) {
         Optional<Card> card = cardRepository.findById(id);
@@ -75,6 +80,36 @@ public class APIController {
             return game.get().getSimple();
         }
 
+        return null;
+    }
+
+    @RequestMapping(value = "/api/games/{id}/players", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<Player.PlayerSimple> players(@PathVariable("id") String id) {
+        return null;
+    }
+
+    @RequestMapping(value = "/api/games/{id}/players", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> addPlayer(@PathVariable("id") String id, String user) {
+        return null;
+    }
+
+    @RequestMapping(value = "/api/games/{id}/players/{index}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Player player(@PathVariable("id") String id, @PathVariable("index") int index) {
+        return null;
+    }
+
+    @RequestMapping(value = "/api/games/{id}/actions", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<Game.Action> actions(@PathVariable("id") String id) {
+        return null;
+    }
+
+    @RequestMapping(value = "/api/games/{id}/actions", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> addAction(@PathVariable("id") String id, Game.ActionType type, int player, int index) {
+        return null;
+    }
+
+    @RequestMapping(value = "/api/games/{id}/actions/{index}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Game.Action action(@PathVariable("id") String id, @PathVariable("index") int index) {
         return null;
     }
 
