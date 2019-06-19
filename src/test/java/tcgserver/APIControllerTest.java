@@ -586,6 +586,37 @@ public class APIControllerTest {
     }
 
     @Test
+    public void addAction_Unauthorized() {
+        // Arrange
+        userRepository.deleteAll();
+        ArrayList<User> users = new ArrayList<>();
+        Game game = new Game(null, false);
+        for (int i = 0; i < Game.MIN_PLAYERS; i++) {
+            User user = createUserForTest();
+            game.addPlayer(user);
+            users.add(user);
+        }
+        Assume.assumeTrue(game.start());
+        gameRepository.save(game);
+        String token = new String(Base64.encodeBase64(("a:b").getBytes()));
+
+        // Act
+        ValidatableResponse response = given().urlEncodingEnabled(true).redirects().follow(false)
+                .param("type", Game.ActionType.DRAW_CARD)
+                .param("player", 0)
+                .param("index", 0)
+                .header("Accept", ContentType.JSON.getAcceptHeader())
+                .header("Authorization", "Bearer " + token)
+                .post("/api/games/" + game.getId() + "/actions").then();
+
+        // Assert
+        response.assertThat()
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                .body("status", equalTo(HttpStatus.UNAUTHORIZED.value()))
+                .body("message", notNullValue());
+    }
+
+    @Test
     public void getAction() {
         // Arrange
         Game game = new Game();
@@ -702,7 +733,7 @@ public class APIControllerTest {
                 .param("name", "username")
                 .param("password", "123")
                 .header("Accept", ContentType.JSON.getAcceptHeader())
-                .post("/api/users").then();
+                .post("/api/users/auth").then();
 
         // Assert
         response.assertThat()

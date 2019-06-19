@@ -90,18 +90,18 @@ public class APIController {
     }
 
     @RequestMapping(value = "/api/games", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> createGame(String user, @RequestHeader(defaultValue = "") String Authorization) throws APIException {
-        Optional<User> userObject = userRepository.findById(user);
-        if (userObject.isPresent()) {
+    public ResponseEntity<String> createGame(@RequestHeader(defaultValue = "") String Authorization) throws APIException {
+        User user = getAuthorizedUser(Authorization);
+        if (user != null) {
             Game game = new Game(cardRepository.findAll());
-            game.addPlayer(userObject.get());
+            game.addPlayer(user);
             gameRepository.save(game);
             return ResponseEntity.status(HttpStatus.FOUND)
                     .location(URI.create("/api/games/" + game.getId()))
                     .build();
         }
 
-        throw new APIException(HttpStatus.BAD_REQUEST, "User not found");
+        throw new APIException(HttpStatus.UNAUTHORIZED, "User login is required");
     }
 
     @RequestMapping(value = "/api/games/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -130,13 +130,13 @@ public class APIController {
     }
 
     @RequestMapping(value = "/api/games/{id}/players", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> addPlayer(@PathVariable("id") String id, String user, @RequestHeader(defaultValue = "") String Authorization) throws APIException {
+    public ResponseEntity<String> addPlayer(@PathVariable("id") String id, @RequestHeader(defaultValue = "") String Authorization) throws APIException {
+        User user = getAuthorizedUser(Authorization);
         Optional<Game> gameObject = gameRepository.findById(id);
         if (gameObject.isPresent()) {
             Game game = gameObject.get();
-            Optional<User> userObject = userRepository.findById(user);
-            if (userObject.isPresent()) {
-                int index = game.addPlayer(userObject.get());
+            if (user != null) {
+                int index = game.addPlayer(user);
                 if (index >= 0) {
                     gameRepository.save(game);
                     return ResponseEntity.status(HttpStatus.FOUND)
@@ -148,7 +148,7 @@ public class APIController {
                 }
             }
             else {
-                throw new APIException(HttpStatus.NOT_FOUND, "User not found");
+                throw new APIException(HttpStatus.UNAUTHORIZED, "User login is required");
             }
         }
 
@@ -161,7 +161,13 @@ public class APIController {
         if (gameObject.isPresent()) {
             List<Player> players = gameObject.get().getPlayers();
             if (index >= 0 && index < players.size()) {
-                return players.get(index);
+                User user = getAuthorizedUser(Authorization);
+                if (user != null && user.getId().equals(players.get(index).getUserId())) {
+                    return players.get(index);
+                }
+                else {
+                    throw new APIException(HttpStatus.UNAUTHORIZED, "User login is required");
+                }
             }
         }
 
@@ -180,17 +186,29 @@ public class APIController {
 
     @RequestMapping(value = "/api/games/{id}/actions", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> addAction(@PathVariable("id") String id, Game.ActionType type, int player, int index, @RequestHeader(defaultValue = "") String Authorization) throws APIException {
-        Optional<Game> game = gameRepository.findById(id);
-        if (game.isPresent()) {
-            Game.Action action = new Game.Action(player, type, index);
-            if (game.get().addAction(action)) {
-                gameRepository.save(game.get());
-                return ResponseEntity.status(HttpStatus.FOUND)
-                        .location(URI.create("/api/games/" + game.get().getId() + "/actions/" + (game.get().getActions().size() - 1)))
-                        .build();
+        Optional<Game> gameObject = gameRepository.findById(id);
+        if (gameObject.isPresent()) {
+            Game game = gameObject.get();
+            User user = getAuthorizedUser(Authorization);
+            if (user != null) {
+                if (player >= 0 && player < game.getPlayers().size() && user.getId().equals(game.getPlayers().get(player).getUserId())) {
+                    Game.Action action = new Game.Action(player, type, index);
+                    if (game.addAction(action)) {
+                        gameRepository.save(game);
+                        return ResponseEntity.status(HttpStatus.FOUND)
+                                .location(URI.create("/api/games/" + game.getId() + "/actions/" + (game.getActions().size() - 1)))
+                                .build();
+                    }
+                    else {
+                        throw new APIException(HttpStatus.BAD_REQUEST, "Could not add action");
+                    }
+                }
+                else {
+                    throw new APIException(HttpStatus.BAD_REQUEST, "Invalid player index");
+                }
             }
             else {
-                throw new APIException(HttpStatus.BAD_REQUEST, "Could not add action");
+                throw new APIException(HttpStatus.UNAUTHORIZED, "User login is required");
             }
         }
 
@@ -215,7 +233,15 @@ public class APIController {
 
     @RequestMapping(value = "/api/users", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public User.UserAuthorized createUser(String name, String password) throws APIException {
-        return null;
+        if (userRepository.findByName(name).size() <= 0) {
+            User user = new User(name, User.passwordToHash(password));
+            userRepository.save(user);
+            user.refreshAuthToken();
+            userRepository.save(user);
+            return user.getAuthorized();
+        }
+
+        throw new APIException(HttpStatus.BAD_REQUEST, "User with name already exist");
     }
 
     @RequestMapping(value = "/api/users/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -230,6 +256,41 @@ public class APIController {
 
     @RequestMapping(value = "/api/users/auth", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public User.UserAuthorized auth(String name, String password) throws APIException {
+        List<User> users = userRepository.findByName(name);
+        if (users.size() > 0) {
+            User user = users.get(0);
+            if (user.getPassword().equals(User.passwordToHash(password))) {
+                user.refreshAuthToken();
+                userRepository.save(user);
+                return user.getAuthorized();
+            }
+            else {
+                throw new APIException(HttpStatus.BAD_REQUEST, "Invalid password");
+            }
+        }
+
+        throw new APIException(HttpStatus.NOT_FOUND, "User not found");
+    }
+
+    private User getAuthorizedUser(String authHeader) {
+        if (authHeader.equals("")) {
+            return null;
+        }
+
+        String[] headerSplit = authHeader.split("\\s+");
+        if (headerSplit.length > 1) {
+            String[] credentials = new String(Base64.decodeBase64(headerSplit[1])).split(":");
+            if (credentials.length == 2) {
+                Optional<User> userObject = userRepository.findById(credentials[0]);
+                if (userObject.isPresent()) {
+                    User user = userObject.get();
+                    if (user.getAuthToken().equals(credentials[1]) && user.getExpiresIn() > System.currentTimeMillis()) {
+                        return user;
+                    }
+                }
+            }
+        }
+
         return null;
     }
 }
