@@ -4,9 +4,11 @@ import static io.restassured.RestAssured.*;
 import static io.restassured.matcher.RestAssuredMatchers.*;
 import io.restassured.RestAssured;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
+import org.apache.commons.codec.binary.Base64;
 import org.junit.After;
 import org.junit.Assume;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -129,17 +132,17 @@ public class APIControllerTest {
     @Test
     public void createGame() {
         // Arrange
-        User user = new User();
-        userRepository.save(user);
+        User user = createUserForTest();
         for (int i = 0; i < Game.START_CARD_COUNT; i++) {
             Card card = new Card(5);
             cardRepository.save(card);
         }
+        String token = new String(Base64.encodeBase64((user.getId() + ":" + user.getAuthToken()).getBytes()));
 
         // Act
         ValidatableResponse response = given().urlEncodingEnabled(true).redirects().follow(false)
-                .param("user", user.getId())
                 .header("Accept", ContentType.JSON.getAcceptHeader())
+                .header("Authorization", "Bearer " + token)
                 .post("/api/games").then();
 
         // Assert
@@ -152,24 +155,25 @@ public class APIControllerTest {
     public void createGame_UserNotFound() {
         // Arrange
         userRepository.deleteAll();
+        String token = new String(Base64.encodeBase64(("a:b").getBytes()));
 
         // Act
         ValidatableResponse response = given().urlEncodingEnabled(true).redirects().follow(false)
-                .param("user", "a")
                 .header("Accept", ContentType.JSON.getAcceptHeader())
+                .header("Authorization", "Bearer " + token)
                 .post("/api/games").then();
 
         // Assert
         response.assertThat()
-                .statusCode(HttpStatus.BAD_REQUEST.value())
-                .body("status", equalTo(HttpStatus.BAD_REQUEST.value()))
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                .body("status", equalTo(HttpStatus.UNAUTHORIZED.value()))
                 .body("message", notNullValue());
     }
 
     @Test
     public void getGame() {
         // Arrange
-        Game game = new Game(Arrays.asList(new Card(1), new Card(2), new Card(3)));
+        Game game = new Game();
         game.addPlayer(new Player("userId1", game.getInitialDeck(), Collections.emptyList()));
         game.addPlayer(new Player("userId2", game.getInitialDeck(), Collections.emptyList()));
         gameRepository.save(game);
@@ -204,7 +208,7 @@ public class APIControllerTest {
     @Test
     public void getPlayers() {
         // Arrange
-        Game game = new Game(Arrays.asList(new Card(1), new Card(2), new Card(3)));
+        Game game = new Game();
         game.addPlayer(new Player("userId1", game.getInitialDeck(), Collections.emptyList()));
         game.addPlayer(new Player("userId2", game.getInitialDeck(), Collections.emptyList()));
         gameRepository.save(game);
@@ -237,15 +241,15 @@ public class APIControllerTest {
     @Test
     public void addPlayer() {
         // Arrange
-        Game game = new Game(Arrays.asList(new Card(1), new Card(2), new Card(3)));
+        Game game = new Game();
         gameRepository.save(game);
-        User user = new User();
-        userRepository.save(user);
+        User user = createUserForTest();
+        String token = new String(Base64.encodeBase64((user.getId() + ":" + user.getAuthToken()).getBytes()));
 
         // Act
         ValidatableResponse response = given().urlEncodingEnabled(true).redirects().follow(false)
-                .param("user", user.getId())
                 .header("Accept", ContentType.JSON.getAcceptHeader())
+                .header("Authorization", "Bearer " + token)
                 .post("/api/games/" + game.getId() + "/players").then();
 
         // Assert
@@ -258,13 +262,13 @@ public class APIControllerTest {
     public void addPlayer_GameNotFound() {
         // Arrange
         gameRepository.deleteAll();
-        User user = new User();
-        userRepository.save(user);
+        User user = createUserForTest();
+        String token = new String(Base64.encodeBase64((user.getId() + ":" + user.getAuthToken()).getBytes()));
 
         // Act
         ValidatableResponse response = given().urlEncodingEnabled(true).redirects().follow(false)
-                .param("user", user.getId())
                 .header("Accept", ContentType.JSON.getAcceptHeader())
+                .header("Authorization", "Bearer " + token)
                 .post("/api/games/a/players").then();
 
         // Assert
@@ -280,17 +284,18 @@ public class APIControllerTest {
         Game game = new Game();
         gameRepository.save(game);
         userRepository.deleteAll();
+        String token = new String(Base64.encodeBase64(("a:b").getBytes()));
 
         // Act
         ValidatableResponse response = given().urlEncodingEnabled(true).redirects().follow(false)
-                .param("user", "a")
                 .header("Accept", ContentType.JSON.getAcceptHeader())
+                .header("Authorization", "Bearer " + token)
                 .post("/api/games/" + game.getId() + "/players").then();
 
         // Assert
         response.assertThat()
-                .statusCode(HttpStatus.NOT_FOUND.value())
-                .body("status", equalTo(HttpStatus.NOT_FOUND.value()))
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                .body("status", equalTo(HttpStatus.UNAUTHORIZED.value()))
                 .body("message", notNullValue());
     }
 
@@ -299,19 +304,18 @@ public class APIControllerTest {
         // Arrange
         Game game = new Game();
         for (int i = 0; i < Game.MAX_PLAYERS; i++) {
-            User temp = new User();
-            userRepository.save(temp);
+            User temp = createUserForTest();
             game.addPlayer(temp);
         }
         Assume.assumeTrue(game.getPlayers().size() >= Game.MAX_PLAYERS);
         gameRepository.save(game);
-        User user = new User();
-        userRepository.save(user);
+        User user = createUserForTest();
+        String token = new String(Base64.encodeBase64((user.getId() + ":" + user.getAuthToken()).getBytes()));
 
         // Act
         ValidatableResponse response = given().urlEncodingEnabled(true).redirects().follow(false)
-                .param("user", user.getId())
                 .header("Accept", ContentType.JSON.getAcceptHeader())
+                .header("Authorization", "Bearer " + token)
                 .post("/api/games/" + game.getId() + "/players").then();
 
         // Assert
@@ -324,17 +328,17 @@ public class APIControllerTest {
     @Test
     public void addPlayer_ExistingPlayer() {
         // Arrange
-        User user = new User();
-        userRepository.save(user);
-        Game game = new Game(Arrays.asList(new Card(1), new Card(2), new Card(3)));
+        User user = createUserForTest();
+        Game game = new Game();
         int index = game.addPlayer(user);
         Assume.assumeTrue(index >= 0);
         gameRepository.save(game);
+        String token = new String(Base64.encodeBase64((user.getId() + ":" + user.getAuthToken()).getBytes()));
 
         // Act
         ValidatableResponse response = given().urlEncodingEnabled(true).redirects().follow(false)
-                .param("user", user.getId())
                 .header("Accept", ContentType.JSON.getAcceptHeader())
+                .header("Authorization", "Bearer " + token)
                 .post("/api/games/" + game.getId() + "/players").then();
 
         // Assert
@@ -346,16 +350,21 @@ public class APIControllerTest {
     @Test
     public void getPlayer() {
         // Arrange
-        Game game = new Game(Arrays.asList(new Card(1), new Card(2), new Card(3)));
-        game.addPlayer(new Player("userId", game.getInitialDeck(), Collections.emptyList()));
+        Game game = new Game();
+        userRepository.deleteAll();
+        User user = createUserForTest();
+        game.addPlayer(user);
         gameRepository.save(game);
+        String token = new String(Base64.encodeBase64((user.getId() + ":" + user.getAuthToken()).getBytes()));
 
         // Act
-        ValidatableResponse response = get("/api/games/" + game.getId() + "/players/0").then();
+        ValidatableResponse response = given()
+                .header("Authorization", "Bearer " + token)
+                .get("/api/games/" + game.getId() + "/players/0").then();
 
         // Assert
         response.assertThat()
-                .body("userId", equalTo("userId"))
+                .body("userId", equalTo(user.getId()))
                 .body("deck.size()", equalTo(3))
                 .body("hand.size()", equalTo(0));
     }
@@ -365,9 +374,14 @@ public class APIControllerTest {
         // Arrange
         Game game = new Game();
         gameRepository.save(game);
+        userRepository.deleteAll();
+        User user = createUserForTest();
+        String token = new String(Base64.encodeBase64((user.getId() + ":" + user.getAuthToken()).getBytes()));
 
         // Act
-        ValidatableResponse response = get("/api/games/" + game.getId() + "/players/0").then();
+        ValidatableResponse response = given()
+                .header("Authorization", "Bearer " + token)
+                .get("/api/games/" + game.getId() + "/players/0").then();
 
         // Assert
         response.assertThat()
@@ -377,12 +391,39 @@ public class APIControllerTest {
     }
 
     @Test
+    public void getPlayer_Unauthorized() {
+        // Arrange
+        userRepository.deleteAll();
+        User user = createUserForTest();
+        Game game = new Game();
+        game.addPlayer(user);
+        gameRepository.save(game);
+        String token = new String(Base64.encodeBase64(("a:b").getBytes()));
+
+        // Act
+        ValidatableResponse response = given()
+                .header("Authorization", "Bearer " + token)
+                .get("/api/games/" + game.getId() + "/players/0").then();
+
+        // Assert
+        response.assertThat()
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                .body("status", equalTo(HttpStatus.UNAUTHORIZED.value()))
+                .body("message", notNullValue());
+    }
+
+    @Test
     public void getPlayer_GameNotFound() {
         // Arrange
         gameRepository.deleteAll();
+        userRepository.deleteAll();
+        User user = createUserForTest();
+        String token = new String(Base64.encodeBase64((user.getId() + ":" + user.getAuthToken()).getBytes()));
 
         // Act
-        ValidatableResponse response = get("/api/games/a/players/0").then();
+        ValidatableResponse response = given()
+                .header("Authorization", "Bearer " + token)
+                .get("/api/games/a/players/0").then();
 
         // Assert
         response.assertThat()
@@ -431,12 +472,17 @@ public class APIControllerTest {
     @Test
     public void addAction() {
         // Arrange
+        userRepository.deleteAll();
+        ArrayList<User> users = new ArrayList<>();
         Game game = new Game(null, false);
         for (int i = 0; i < Game.MIN_PLAYERS; i++) {
-            game.addPlayer(new Player("userId" + i, game.getInitialDeck(), Collections.emptyList()));
+            User user = createUserForTest();
+            game.addPlayer(user);
+            users.add(user);
         }
         Assume.assumeTrue(game.start());
         gameRepository.save(game);
+        String token = new String(Base64.encodeBase64((users.get(game.getActivePlayer()).getId() + ":" + users.get(game.getActivePlayer()).getAuthToken()).getBytes()));
         int currentActionCount = game.getActions().size();
 
         // Act
@@ -445,6 +491,7 @@ public class APIControllerTest {
                 .param("player", game.getActivePlayer())
                 .param("index", 0)
                 .header("Accept", ContentType.JSON.getAcceptHeader())
+                .header("Authorization", "Bearer " + token)
                 .post("/api/games/" + game.getId() + "/actions").then();
 
         // Assert
@@ -457,6 +504,8 @@ public class APIControllerTest {
     public void addAction_GameNotFound() {
         // Arrange
         gameRepository.deleteAll();
+        User user = createUserForTest();
+        String token = new String(Base64.encodeBase64((user.getId() + ":" + user.getAuthToken()).getBytes()));
 
         // Act
         ValidatableResponse response = given().urlEncodingEnabled(true).redirects().follow(false)
@@ -464,6 +513,7 @@ public class APIControllerTest {
                 .param("player", 0)
                 .param("index", 0)
                 .header("Accept", ContentType.JSON.getAcceptHeader())
+                .header("Authorization", "Bearer " + token)
                 .post("/api/games/a/actions").then();
 
         // Assert
@@ -476,11 +526,47 @@ public class APIControllerTest {
     @Test
     public void addAction_InvalidAction() {
         // Arrange
+        userRepository.deleteAll();
+        ArrayList<User> users = new ArrayList<>();
         Game game = new Game(null, false);
         for (int i = 0; i < Game.MIN_PLAYERS; i++) {
-            game.addPlayer(new Player("userId" + i, game.getInitialDeck(), Collections.emptyList()));
+            User user = createUserForTest();
+            game.addPlayer(user);
+            users.add(user);
         }
         Assume.assumeTrue(game.start());
+        String token = new String(Base64.encodeBase64((users.get(game.getActivePlayer()).getId() + ":" + users.get(game.getActivePlayer()).getAuthToken()).getBytes()));
+        gameRepository.save(game);
+
+        // Act
+        ValidatableResponse response = given().urlEncodingEnabled(true).redirects().follow(false)
+                .param("type", Game.ActionType.PLAY_CARD)
+                .param("player", game.getActivePlayer())
+                .param("index", -1)
+                .header("Accept", ContentType.JSON.getAcceptHeader())
+                .header("Authorization", "Bearer " + token)
+                .post("/api/games/" + game.getId() + "/actions").then();
+
+        // Assert
+        response.assertThat()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body("status", equalTo(HttpStatus.BAD_REQUEST.value()))
+                .body("message", notNullValue());
+    }
+
+    @Test
+    public void addAction_DifferentPlayer() {
+        // Arrange
+        userRepository.deleteAll();
+        ArrayList<User> users = new ArrayList<>();
+        Game game = new Game(null, false);
+        for (int i = 0; i < Game.MIN_PLAYERS; i++) {
+            User user = createUserForTest();
+            game.addPlayer(user);
+            users.add(user);
+        }
+        Assume.assumeTrue(game.start());
+        String token = new String(Base64.encodeBase64((users.get(game.getActivePlayer()).getId() + ":" + users.get(game.getActivePlayer()).getAuthToken()).getBytes()));
         gameRepository.save(game);
 
         // Act
@@ -489,6 +575,7 @@ public class APIControllerTest {
                 .param("player", -1)
                 .param("index", 0)
                 .header("Accept", ContentType.JSON.getAcceptHeader())
+                .header("Authorization", "Bearer " + token)
                 .post("/api/games/" + game.getId() + "/actions").then();
 
         // Assert
@@ -557,8 +644,7 @@ public class APIControllerTest {
     @Test
     public void getUser() {
         // Arrange
-        User user = new User();
-        userRepository.save(user);
+        User user = createUserForTest();
 
         // Act
         ValidatableResponse response = get("/api/users/" + user.getId()).then();
@@ -581,5 +667,60 @@ public class APIControllerTest {
                 .statusCode(HttpStatus.NOT_FOUND.value())
                 .body("status", equalTo(HttpStatus.NOT_FOUND.value()))
                 .body("message", notNullValue());
+    }
+
+    @Test
+    public void createUser() {
+        // Arrange
+        userRepository.deleteAll();
+
+        // Act
+        ValidatableResponse response = given().urlEncodingEnabled(true)
+                .param("name", "username")
+                .param("password", "123")
+                .header("Accept", ContentType.JSON.getAcceptHeader())
+                .post("/api/users").then();
+
+        // Assert
+        response.assertThat()
+                .body("id", notNullValue())
+                .body("name", equalTo("username"))
+                .body("authToken", notNullValue())
+                .body("expiresIn", greaterThanOrEqualTo(System.currentTimeMillis()));
+
+        assertEquals(1, userRepository.findByName("username").size());
+    }
+
+    @Test
+    public void getAuthToken() {
+        // Arrange
+        userRepository.deleteAll();
+        User user = createUserForTest("username", "123");
+
+        // Act
+        ValidatableResponse response = given().urlEncodingEnabled(true)
+                .param("name", "username")
+                .param("password", "123")
+                .header("Accept", ContentType.JSON.getAcceptHeader())
+                .post("/api/users").then();
+
+        // Assert
+        response.assertThat()
+                .body("id", notNullValue())
+                .body("name", equalTo("username"))
+                .body("authToken", notNullValue())
+                .body("expiresIn", greaterThanOrEqualTo(System.currentTimeMillis()));
+    }
+
+    private User createUserForTest() {
+        return createUserForTest("", "");
+    }
+
+    private User createUserForTest(String name, String password) {
+        User user = new User(name, User.passwordToHash(password));
+        userRepository.save(user);
+        user.refreshAuthToken();
+        userRepository.save(user);
+        return user;
     }
 }

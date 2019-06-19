@@ -1,5 +1,6 @@
 package tcgserver;
 
+import org.apache.commons.codec.binary.Base64;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,7 +90,7 @@ public class APIController {
     }
 
     @RequestMapping(value = "/api/games", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> createGame(String user) throws APIException {
+    public ResponseEntity<String> createGame(String user, @RequestHeader(defaultValue = "") String Authorization) throws APIException {
         Optional<User> userObject = userRepository.findById(user);
         if (userObject.isPresent()) {
             Game game = new Game(cardRepository.findAll());
@@ -129,7 +130,7 @@ public class APIController {
     }
 
     @RequestMapping(value = "/api/games/{id}/players", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> addPlayer(@PathVariable("id") String id, String user) throws APIException {
+    public ResponseEntity<String> addPlayer(@PathVariable("id") String id, String user, @RequestHeader(defaultValue = "") String Authorization) throws APIException {
         Optional<Game> gameObject = gameRepository.findById(id);
         if (gameObject.isPresent()) {
             Game game = gameObject.get();
@@ -155,7 +156,7 @@ public class APIController {
     }
 
     @RequestMapping(value = "/api/games/{id}/players/{index}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Player player(@PathVariable("id") String id, @PathVariable("index") int index) throws APIException {
+    public Player player(@PathVariable("id") String id, @PathVariable("index") int index, @RequestHeader(defaultValue = "") String Authorization) throws APIException {
         Optional<Game> gameObject = gameRepository.findById(id);
         if (gameObject.isPresent()) {
             List<Player> players = gameObject.get().getPlayers();
@@ -178,7 +179,7 @@ public class APIController {
     }
 
     @RequestMapping(value = "/api/games/{id}/actions", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> addAction(@PathVariable("id") String id, Game.ActionType type, int player, int index) throws APIException {
+    public ResponseEntity<String> addAction(@PathVariable("id") String id, Game.ActionType type, int player, int index, @RequestHeader(defaultValue = "") String Authorization) throws APIException {
         Optional<Game> game = gameRepository.findById(id);
         if (game.isPresent()) {
             Game.Action action = new Game.Action(player, type, index);
@@ -212,6 +213,11 @@ public class APIController {
         throw new APIException(HttpStatus.NOT_FOUND, "Game not found");
     }
 
+    @RequestMapping(value = "/api/users", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    public User.UserAuthorized createUser(String name, String password) throws APIException {
+        return null;
+    }
+
     @RequestMapping(value = "/api/users/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public User.UserSimple user(@PathVariable("id") String id) throws APIException {
         Optional<User> user = userRepository.findById(id);
@@ -220,5 +226,10 @@ public class APIController {
         }
 
         throw new APIException(HttpStatus.NOT_FOUND, "User not found");
+    }
+
+    @RequestMapping(value = "/api/users/auth", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    public User.UserAuthorized auth(String name, String password) throws APIException {
+        return null;
     }
 }
