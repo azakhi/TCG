@@ -29,27 +29,27 @@ public class GameTest {
         Game game = new Game(Arrays.asList(new Card(0), new Card(1), new Card(2), new Card(3), new Card(4)));
 
         // Act
-        Player player = game.addPlayer(new User());
+        int player = game.addPlayer(new User());
 
         // Assert
         assertEquals(1, game.getPlayers().size());
-        assertEquals(player, game.getPlayers().get(0));
-        assertEquals(5, player.getDeck().size());
+        assertEquals(0, player);
+        assertEquals(5, game.getPlayers().get(player).getDeck().size());
     }
 
     @Test
     public void addPlayer_MaxPlayers_PlayerNotAdded() {
         // Arrange
         Game game = new Game();
-        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new User());
+        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new Player("" + i, game.getInitialDeck(), Collections.emptyList()));
         Assume.assumeTrue(game.getPlayers().size() == Game.MAX_PLAYERS);
 
         // Act
-        Player player = game.addPlayer(new User());
+        int player = game.addPlayer(new User());
 
         // Assert
         assertEquals(Game.MAX_PLAYERS, game.getPlayers().size());
-        assertNull(player);
+        assertEquals(-1, player);
     }
 
     @Test
@@ -71,7 +71,7 @@ public class GameTest {
 
         // Arrange
         Game game = new Game(Arrays.asList(new Card(0), new Card(1), new Card(2), new Card(3), new Card(4)), true);
-        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new User());
+        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new Player("" + i, game.getInitialDeck(), Collections.emptyList()));
         Assume.assumeTrue(game.getPlayers().size() == Game.MAX_PLAYERS);
 
         // Act
@@ -91,7 +91,7 @@ public class GameTest {
     public void start_AlreadyRunningGame_FalseReturned() {
         // Arrange
         Game game = new Game(Arrays.asList(new Card(0), new Card(1), new Card(2), new Card(3), new Card(4)));
-        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new User());
+        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new Player("" + i, game.getInitialDeck(), Collections.emptyList()));
         Assume.assumeTrue(game.getPlayers().size() == Game.MAX_PLAYERS);
         game.start();
         Assume.assumeTrue(game.getState() == Game.GameState.ACTIVE);
@@ -110,14 +110,14 @@ public class GameTest {
         ArrayList<Card> initialDeck = new ArrayList<>();
         for (int i = 0; i <= Game.START_CARD_COUNT; i++) initialDeck.add(new Card(i));
         Game game = new Game(initialDeck, false);
-        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new User());
+        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new Player("" + i, game.getInitialDeck(), Collections.emptyList()));
         Assume.assumeTrue(game.getPlayers().size() == Game.MAX_PLAYERS);
         game.start();
         Assume.assumeTrue(game.getState() == Game.GameState.ACTIVE);
 
         // Act
         int activePlayer = game.getTurn() % game.getPlayers().size();
-        boolean isAdded = game.addAction(game.new Action(activePlayer, Game.ActionType.DRAW_CARD));
+        boolean isAdded = game.addAction(new Game.Action(activePlayer, Game.ActionType.DRAW_CARD));
 
         // Assert
         assertEquals(true, isAdded);
@@ -131,15 +131,15 @@ public class GameTest {
         ArrayList<Card> initialDeck = new ArrayList<>();
         for (int i = 0; i < (Game.START_CARD_COUNT + 2); i++) initialDeck.add(new Card(i));
         Game game = new Game(initialDeck, false);
-        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new User());
+        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new Player("" + i, game.getInitialDeck(), Collections.emptyList()));
         Assume.assumeTrue(game.getPlayers().size() == Game.MAX_PLAYERS);
         game.start();
         Assume.assumeTrue(game.getState() == Game.GameState.ACTIVE);
         int activePlayer = game.getTurn() % game.getPlayers().size();
-        Assume.assumeTrue(game.addAction(game.new Action(activePlayer, Game.ActionType.DRAW_CARD)));
+        Assume.assumeTrue(game.addAction(new Game.Action(activePlayer, Game.ActionType.DRAW_CARD)));
 
         // Act
-        boolean isAdded = game.addAction(game.new Action(activePlayer, Game.ActionType.DRAW_CARD));
+        boolean isAdded = game.addAction(new Game.Action(activePlayer, Game.ActionType.DRAW_CARD));
 
         // Assert
         assertEquals(false, isAdded);
@@ -153,7 +153,7 @@ public class GameTest {
         ArrayList<Card> initialDeck = new ArrayList<>();
         for (int i = 0; i < Game.START_CARD_COUNT; i++) initialDeck.add(new Card(i));
         Game game = new Game(initialDeck, false);
-        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new User());
+        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new Player("" + i, game.getInitialDeck(), Collections.emptyList()));
         Assume.assumeTrue(game.getPlayers().size() == Game.MAX_PLAYERS);
         game.start();
         Assume.assumeTrue(game.getState() == Game.GameState.ACTIVE);
@@ -161,7 +161,7 @@ public class GameTest {
         Assume.assumeTrue(game.getPlayers().get(activePlayer).getDeck().size() == 0);
 
         // Act
-        boolean isAdded = game.addAction(game.new Action(activePlayer, Game.ActionType.DRAW_CARD));
+        boolean isAdded = game.addAction(new Game.Action(activePlayer, Game.ActionType.DRAW_CARD));
 
         // Assert
         assertEquals(true, isAdded);
@@ -175,7 +175,7 @@ public class GameTest {
         ArrayList<Card> initialDeck = new ArrayList<>();
         for (int i = 0; i < (Game.START_CARD_COUNT + 2); i++) initialDeck.add(new Card(5));
         Game game = new Game(initialDeck, true);
-        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new Player(initialDeck, Collections.emptyList(), 10, 10, 10));
+        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new Player("" + i, initialDeck, Collections.emptyList(), 10, 10, 10));
         Assume.assumeTrue(game.getPlayers().size() == Game.MAX_PLAYERS);
         game.start();
         Assume.assumeTrue(game.getState() == Game.GameState.ACTIVE);
@@ -184,7 +184,7 @@ public class GameTest {
 
         // Act
         Card playedCard = game.getPlayers().get(activePlayer).getHand().get(0);
-        boolean isAdded = game.addAction(game.new Action(activePlayer, Game.ActionType.PLAY_CARD, 0));
+        boolean isAdded = game.addAction(new Game.Action(activePlayer, Game.ActionType.PLAY_CARD, 0));
 
         // Assert
         assertEquals(true, isAdded);
@@ -204,14 +204,14 @@ public class GameTest {
         ArrayList<Card> initialDeck = new ArrayList<>();
         for (int i = 0; i < Game.START_CARD_COUNT; i++) initialDeck.add(new Card(i));
         Game game = new Game(initialDeck, true);
-        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new User());
+        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new Player("" + i, game.getInitialDeck(), Collections.emptyList()));
         Assume.assumeTrue(game.getPlayers().size() == Game.MAX_PLAYERS);
         game.start();
         Assume.assumeTrue(game.getState() == Game.GameState.ACTIVE);
 
         // Act
         int activePlayer = game.getTurn() % game.getPlayers().size();
-        boolean isAdded = game.addAction(game.new Action(activePlayer, Game.ActionType.PLAY_CARD, game.getPlayers().get(activePlayer).getHand().size()));
+        boolean isAdded = game.addAction(new Game.Action(activePlayer, Game.ActionType.PLAY_CARD, game.getPlayers().get(activePlayer).getHand().size()));
 
         // Assert
         assertEquals(false, isAdded);
@@ -224,7 +224,7 @@ public class GameTest {
         ArrayList<Card> initialDeck = new ArrayList<>();
         for (int i = 0; i < Game.START_CARD_COUNT; i++) initialDeck.add(new Card(10));
         Game game = new Game(initialDeck, true);
-        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new Player(initialDeck, Collections.emptyList(), 5, 10, 10));
+        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new Player("" + i, initialDeck, Collections.emptyList(), 5, 10, 10));
         Assume.assumeTrue(game.getPlayers().size() == Game.MAX_PLAYERS);
         game.start();
         Assume.assumeTrue(game.getState() == Game.GameState.ACTIVE);
@@ -232,7 +232,7 @@ public class GameTest {
         Assume.assumeTrue(game.getPlayers().get(activePlayer).getHand().size() > 0);
 
         // Act
-        boolean isAdded = game.addAction(game.new Action(activePlayer, Game.ActionType.PLAY_CARD, 0));
+        boolean isAdded = game.addAction(new Game.Action(activePlayer, Game.ActionType.PLAY_CARD, 0));
 
         // Assert
         assertEquals(true, isAdded);
@@ -251,7 +251,7 @@ public class GameTest {
         ArrayList<Card> initialDeck = new ArrayList<>();
         for (int i = 0; i < (Game.START_CARD_COUNT + 2); i++) initialDeck.add(new Card(0));
         Game game = new Game(initialDeck, false);
-        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new User());
+        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new Player("" + i, game.getInitialDeck(), Collections.emptyList()));
         Assume.assumeTrue(game.getPlayers().size() == Game.MAX_PLAYERS);
         game.start();
         Assume.assumeTrue(game.getState() == Game.GameState.ACTIVE);
@@ -259,7 +259,7 @@ public class GameTest {
         // Act
         int currentTurn = game.getTurn();
         int activePlayer = game.getTurn() % game.getPlayers().size();
-        boolean isAdded = game.addAction(game.new Action(activePlayer));
+        boolean isAdded = game.addAction(new Game.Action(activePlayer));
 
         // Assert
         assertEquals(true, isAdded);
@@ -273,16 +273,16 @@ public class GameTest {
         ArrayList<Card> initialDeck = new ArrayList<>();
         for (int i = 0; i <= Game.START_CARD_COUNT; i++) initialDeck.add(new Card(i));
         Game game = new Game(initialDeck, false);
-        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new User());
+        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new Player("" + i, game.getInitialDeck(), Collections.emptyList()));
         Assume.assumeTrue(game.getPlayers().size() == Game.MAX_PLAYERS);
         game.start();
         Assume.assumeTrue(game.getState() == Game.GameState.ACTIVE);
 
         // Act
         int otherPlayer = (game.getTurn() + 1) % game.getPlayers().size();
-        boolean isDrawCardAdded = game.addAction(game.new Action(otherPlayer, Game.ActionType.DRAW_CARD));
-        boolean isPlayCardAdded = game.addAction(game.new Action(otherPlayer, Game.ActionType.PLAY_CARD, 0));
-        boolean isActionAdded = game.addAction(game.new Action(otherPlayer));
+        boolean isDrawCardAdded = game.addAction(new Game.Action(otherPlayer, Game.ActionType.DRAW_CARD));
+        boolean isPlayCardAdded = game.addAction(new Game.Action(otherPlayer, Game.ActionType.PLAY_CARD, 0));
+        boolean isActionAdded = game.addAction(new Game.Action(otherPlayer));
 
         // Assert
         assertEquals(false, isDrawCardAdded);
@@ -297,20 +297,20 @@ public class GameTest {
         ArrayList<Card> initialDeck = new ArrayList<>();
         for (int i = 0; i <= Game.START_CARD_COUNT; i++) initialDeck.add(new Card(i));
         Game game = new Game(initialDeck, false);
-        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new User());
+        for (int i = 0; i < Game.MAX_PLAYERS; i++) game.addPlayer(new Player("" + i, game.getInitialDeck(), Collections.emptyList()));
         Assume.assumeTrue(game.getPlayers().size() == Game.MAX_PLAYERS);
         Assume.assumeTrue(game.getState() != Game.GameState.ACTIVE);
 
         // Act
         // Assert
         assertThrows(AssertionError.class, () -> {
-            game.addAction(game.new Action(0, Game.ActionType.DRAW_CARD));
+            game.addAction(new Game.Action(0, Game.ActionType.DRAW_CARD));
         });
         assertThrows(AssertionError.class, () -> {
-            game.addAction(game.new Action(0, Game.ActionType.PLAY_CARD, 0));
+            game.addAction(new Game.Action(0, Game.ActionType.PLAY_CARD, 0));
         });
         assertThrows(AssertionError.class, () -> {
-            game.addAction(game.new Action(0));
+            game.addAction(new Game.Action(0));
         });
     }
 }

@@ -216,7 +216,7 @@ public class APIControllerTest {
         }
         Assume.assumeTrue(game.start());
         if (!game.isDrawCardAtTurnStart()) {
-            Assume.assumeTrue(game.addAction(game.new Action(game.getActivePlayer(), Game.ActionType.DRAW_CARD)));
+            Assume.assumeTrue(game.addAction(new Game.Action(game.getActivePlayer(), Game.ActionType.DRAW_CARD)));
         }
         gameRepository.save(game);
 
@@ -263,7 +263,7 @@ public class APIControllerTest {
         }
         Assume.assumeTrue(game.start());
         if (!game.isDrawCardAtTurnStart()) {
-            Assume.assumeTrue(game.addAction(game.new Action(game.getActivePlayer(), Game.ActionType.DRAW_CARD)));
+            Assume.assumeTrue(game.addAction(new Game.Action(game.getActivePlayer(), Game.ActionType.DRAW_CARD)));
         }
         gameRepository.save(game);
 

@@ -22,21 +22,21 @@ public class Game {
         SKIP
     }
 
-    public class Action {
+    public static class Action {
         private int player;
         private ActionType type;
         private int index;
 
+        public Action() {
+            this(-1);
+        }
+
         public Action(int player) {
-            this.player = player;
-            type = ActionType.SKIP;
-            index = -1;
+            this(player, ActionType.SKIP);
         }
 
         public Action(int player, ActionType type) {
-            this.type = type;
-            this.player = player;
-            index = -1;
+            this(player, type, -1);
         }
 
         public Action(int player, ActionType type, int index) {
@@ -139,17 +139,32 @@ public class Game {
         return turn % players.size();
     }
 
-    public Player addPlayer(User user) {
+    public int getPlayerIndex(String userId) {
+        for (int i = 0; i < players.size(); i++) {
+            if (players.get(i).getUserId() == userId) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    public int addPlayer(User user) {
         return addPlayer(new Player(user.getId(), initialDeck, Collections.emptyList()));
     }
 
-    public Player addPlayer(Player player) {
-        if (players.size() < MAX_PLAYERS) {
-            players.add(player);
-            return player;
+    public int addPlayer(Player player) {
+        int index = getPlayerIndex(player.getUserId());
+        if (index >= 0) {
+            return index;
         }
 
-        return null;
+        if (players.size() < MAX_PLAYERS) {
+            players.add(player);
+            return players.size() - 1;
+        }
+
+        return -1;
     }
 
     public boolean start() {

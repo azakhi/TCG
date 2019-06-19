@@ -34,7 +34,13 @@ public class APIController {
 
     @RequestMapping(value = "/api/cards", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<Card.CardSimple> cards() {
-        return null;
+        ArrayList<Card.CardSimple> simples = new ArrayList<>();
+        List<Card> cards = cardRepository.findAll();
+        for (Card c : cards) {
+            simples.add(c.getSimple());
+        }
+
+        return simples;
     }
 
     @RequestMapping(value = "/api/cards/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -85,31 +91,87 @@ public class APIController {
 
     @RequestMapping(value = "/api/games/{id}/players", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public List<Player.PlayerSimple> players(@PathVariable("id") String id) {
+        Optional<Game> game = gameRepository.findById(id);
+        if (game.isPresent()) {
+            ArrayList<Player.PlayerSimple> simples = new ArrayList<>();
+            for (Player p : game.get().getPlayers()) {
+                simples.add(p.getSimple());
+            }
+
+            return simples;
+        }
+
         return null;
     }
 
     @RequestMapping(value = "/api/games/{id}/players", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> addPlayer(@PathVariable("id") String id, String user) {
+        Optional<Game> gameObject = gameRepository.findById(id);
+        if (gameObject.isPresent()) {
+            Game game = gameObject.get();
+            Optional<User> userObject = userRepository.findById(user);
+            if (userObject.isPresent()) {
+                int index = game.addPlayer(userObject.get());
+                if (index >= 0) {
+                    gameRepository.save(game);
+                    return ResponseEntity.status(HttpStatus.FOUND)
+                            .location(URI.create("/api/games/" + game.getId() + "/players/" + index))
+                            .build();
+                }
+            }
+        }
+
         return null;
     }
 
     @RequestMapping(value = "/api/games/{id}/players/{index}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Player player(@PathVariable("id") String id, @PathVariable("index") int index) {
+        Optional<Game> gameObject = gameRepository.findById(id);
+        if (gameObject.isPresent()) {
+            List<Player> players = gameObject.get().getPlayers();
+            if (index >= 0 && index < players.size()) {
+                return players.get(index);
+            }
+        }
+
         return null;
     }
 
     @RequestMapping(value = "/api/games/{id}/actions", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public List<Game.Action> actions(@PathVariable("id") String id) {
+        Optional<Game> game = gameRepository.findById(id);
+        if (game.isPresent()) {
+            return game.get().getActions();
+        }
+
         return null;
     }
 
     @RequestMapping(value = "/api/games/{id}/actions", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> addAction(@PathVariable("id") String id, Game.ActionType type, int player, int index) {
+        Optional<Game> game = gameRepository.findById(id);
+        if (game.isPresent()) {
+            Game.Action action = new Game.Action(player, type, index);
+            if (game.get().addAction(action)) {
+                return ResponseEntity.status(HttpStatus.FOUND)
+                        .location(URI.create("/api/games/" + game.get().getId() + "/actions/" + (game.get().getActions().size() - 1)))
+                        .build();
+            }
+        }
+
         return null;
     }
 
     @RequestMapping(value = "/api/games/{id}/actions/{index}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Game.Action action(@PathVariable("id") String id, @PathVariable("index") int index) {
+        Optional<Game> gameObject = gameRepository.findById(id);
+        if (gameObject.isPresent()) {
+            List<Game.Action> actions = gameObject.get().getActions();
+            if (index >= 0 && index < actions.size()) {
+                return actions.get(index);
+            }
+        }
+
         return null;
     }
 
