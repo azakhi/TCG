@@ -5,6 +5,7 @@ import static io.restassured.matcher.RestAssuredMatchers.*;
 import io.restassured.RestAssured;
 import static org.hamcrest.Matchers.*;
 
+import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import org.junit.After;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,12 +63,49 @@ public class APIControllerTest {
         cardRepository.save(card);
 
         // Act
-        ValidatableResponse response = get("/api/card/" + card.getId()).then();
+        ValidatableResponse response = get("/api/cards/" + card.getId()).then();
 
         // Assert
         response.assertThat()
                 .body("id", equalTo(card.getId()))
                 .body("mana", equalTo(5));
+    }
+
+    @Test
+    public void getGames() {
+        // Arrange
+        gameRepository.deleteAll();
+        Game game1 = new Game();
+        gameRepository.save(game1);
+        Game game2 = new Game();
+        gameRepository.save(game2);
+
+        // Act
+        ValidatableResponse response = get("/api/games").then();
+
+        // Assert
+        response.assertThat()
+                .body("size()", equalTo(2))
+                .body("[0].id", equalTo(game1.getId()))
+                .body("[1].id", equalTo(game2.getId()));
+    }
+
+    @Test
+    public void createGame() {
+        // Arrange
+        User user = new User();
+        userRepository.save(user);
+
+        // Act
+        ValidatableResponse response = given().urlEncodingEnabled(true).redirects().follow(false)
+                .param("user", user.getId())
+                .header("Accept", ContentType.JSON.getAcceptHeader())
+                .post("/api/games").then();
+
+        // Assert
+        response.assertThat()
+                .statusCode(302)
+                .header("Location", startsWith("/api/games/"));
     }
 
     @Test
@@ -79,7 +117,7 @@ public class APIControllerTest {
         gameRepository.save(game);
 
         // Act
-        ValidatableResponse response = get("/api/game/" + game.getId()).then();
+        ValidatableResponse response = get("/api/games/" + game.getId()).then();
 
         // Assert
         response.assertThat()
@@ -97,7 +135,7 @@ public class APIControllerTest {
         userRepository.save(user);
 
         // Act
-        ValidatableResponse response = get("/api/user/" + user.getId()).then();
+        ValidatableResponse response = get("/api/users/" + user.getId()).then();
 
         // Assert
         response.assertThat()

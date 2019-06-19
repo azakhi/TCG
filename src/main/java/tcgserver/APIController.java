@@ -1,13 +1,20 @@
 package tcgserver;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,7 +35,7 @@ public class APIController {
         return "{\"version\":\"0.1\"}";
     }
 
-    @RequestMapping(value = "/api/card/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/api/cards/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Card.CardSimple card(@PathVariable("id") String id) {
         Optional<Card> card = cardRepository.findById(id);
         if (card.isPresent()) {
@@ -38,7 +45,17 @@ public class APIController {
         return null;
     }
 
-    @RequestMapping(value = "/api/game/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/api/games", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<Game.GameSimple> games() {
+        return null;
+    }
+
+    @RequestMapping(value = "/api/games", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> createGame() {
+        return null;
+    }
+
+    @RequestMapping(value = "/api/games/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Game.GameSimple game(@PathVariable("id") String id) {
         Optional<Game> game = gameRepository.findById(id);
         if (game.isPresent()) {
@@ -48,7 +65,7 @@ public class APIController {
         return null;
     }
 
-    @RequestMapping(value = "/api/user/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/api/users/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public User.UserSimple user(@PathVariable("id") String id) {
         Optional<User> user = userRepository.findById(id);
         if (user.isPresent()) {
